@@ -1,0 +1,237 @@
+// This is your Prisma schema file for MongoDB
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// --- CORE MODELS ---
+
+model User {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  email         String         @unique
+  password      String
+  fullName      String
+  phone         String?
+  role          String         @default("CONSULTANT") // MongoDB Prisma doesn't support enums the same way, using String
+  avatar        String?
+  isActive      Boolean        @default(true)
+  
+  refreshTokens RefreshToken[]
+  posts         Post[]
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// --- CRM MODULE ---
+
+model Lead {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  email           String?
+  phone           String
+  source          String         @default("WEBSITE")
+  status          String         @default("NEW")
+  note            String?
+  
+  consultantId    String?        @db.ObjectId
+  
+  appointments    Appointment[]
+  activityLogs    ActivityLog[]
+  quizResult      QuizResult?
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("crm_leads")
+}
+
+model Student {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  leadId        String?        @unique @db.ObjectId
+  
+  studentCode   String         @unique
+  fullName      String
+  email         String?
+  phone         String
+  status        String         @default("ACTIVE")
+  
+  enrollments   Enrollment[]
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("crm_students")
+}
+
+model Course {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  slug          String         @unique
+  description   String?
+  content       String?
+  price         Float
+  duration      String?
+  thumbnail     String?
+  isActive      Boolean        @default(true)
+  
+  enrollments   Enrollment[]
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  studentId   String   @db.ObjectId
+  student     Student  @relation(fields: [studentId], references: [id])
+  courseId    String   @db.ObjectId
+  course      Course   @relation(fields: [courseId], references: [id])
+  paidAmount  Float
+  enrolledAt  DateTime @default(now())
+
+  @@map("crm_enrollments")
+}
+
+model Appointment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  leadId      String   @db.ObjectId
+  lead        Lead     @relation(fields: [leadId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  title       String
+  description String?
+  
+  createdAt   DateTime @default(now())
+
+  @@map("crm_appointments")
+}
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String   @unique
+  posts       Post[]
+  
+  createdAt   DateTime @default(now())
+
+  @@map("cms_categories")
+}
+
+model Post {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  slug            String     @unique
+  summary         String?
+  content         String
+  thumbnail       String?
+  status          String     @default("DRAFT")
+  
+  tags            String[]   // New field: tags
+  views           Int        @default(0) // New field: view count
+  
+  authorId        String     @db.ObjectId
+  author          User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  categoryId      String     @db.ObjectId
+  category        Category   @relation(fields: [categoryId], references: [id])
+  
+  seoTitle        String?
+  seoDescription  String?
+  
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@map("cms_posts")
+}
+
+model QuizQuestion {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  section   String   // foundation, skills, goal
+  options   String[]
+  weights   Int[]
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cms_quiz_questions")
+}
+
+model QuizResult {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  leadId      String   @db.ObjectId @unique
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  score       Int
+  level       String   // Beginner, Intermediate, etc.
+  answers     Json?    // Optional: store detailed answers
+  
+  createdAt   DateTime @default(now())
+
+  @@map("crm_quiz_results")
+}
+
+model ActivityLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  leadId    String   @db.ObjectId
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  content   String
+  type      String
+  
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+model LearningPath {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  slug        String   @unique
+  description String?
+  steps       LearningPathStep[]
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("learning_paths")
+}
+
+model LearningPathStep {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  learningPathId String       @db.ObjectId
+  learningPath   LearningPath @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  
+  order          Int          @default(0)
+  title          String
+  description    String
+  target         String
+  features       String[]     // List of highlights
+  color          String       @default("emerald")
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("learning_path_steps")
+}
