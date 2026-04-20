@@ -5,17 +5,38 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { PublicHeader } from '@/components/layout/public-header';
 import { PublicFooter } from '@/components/layout/public-footer';
+import api from '@/lib/axios';
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    course: 'IELTS Foundation',
+    note: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      await api.post('/crm/leads/public', {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        source: 'WEBSITE',
+        note: `Khóa học quan tâm: ${formData.course}. Lời nhắn: ${formData.note}`
+      });
+      alert('Cảm ơn bạn! Thông tin của bạn đã được gửi đến bộ phận tư vấn của EduCore.');
+      setFormData({ fullName: '', phone: '', email: '', course: 'IELTS Foundation', note: '' });
+    } catch (error) {
+      console.error('Lỗi khi gửi yêu cầu:', error);
+      alert('Có lỗi xảy ra, vui lòng thử lại sau.');
+    } finally {
       setIsSubmitting(false);
-      alert('Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm nhất.');
-    }, 2000);
+    }
   };
 
   return (
@@ -68,16 +89,44 @@ export default function ContactPage() {
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">Họ và tên</label>
-                      <input required type="text" placeholder="Nguyễn Văn A" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                      <input 
+                        required 
+                        type="text" 
+                        value={formData.fullName}
+                        onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                        placeholder="Nguyễn Văn A" 
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">Số điện thoại</label>
-                      <input required type="tel" placeholder="090 123 4567" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                      <input 
+                        required 
+                        type="tel" 
+                        value={formData.phone}
+                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="090 123 4567" 
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
+                    <label className="text-sm font-semibold text-slate-700">Email (Không bắt buộc)</label>
+                    <input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="email@example.com" 
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">Khóa học quan tâm</label>
-                    <select className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500">
+                    <select 
+                      value={formData.course}
+                      onChange={e => setFormData({ ...formData, course: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500"
+                    >
                       <option>IELTS Foundation</option>
                       <option>IELTS Intensive</option>
                       <option>IELTS Mastery</option>
@@ -86,7 +135,13 @@ export default function ContactPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">Tin nhắn của bạn</label>
-                    <textarea rows={4} placeholder="Bạn cần chúng tôi giúp gì?" className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+                    <textarea 
+                      rows={4} 
+                      value={formData.note}
+                      onChange={e => setFormData({ ...formData, note: e.target.value })}
+                      placeholder="Bạn cần chúng tôi giúp gì?" 
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    />
                   </div>
                   <Button type="submit" className="w-full py-6 font-bold text-lg" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <><Send className="mr-2 h-5 w-5" /> Gửi yêu cầu tư vấn</>}

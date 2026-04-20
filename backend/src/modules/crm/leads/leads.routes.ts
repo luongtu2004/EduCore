@@ -26,4 +26,11 @@ export const leadRoutes: FastifyPluginAsyncZod = async (server) => {
     schema: { body: updateLeadStatusSchema },
     handler: leadsController.updateStatus.bind(leadsController),
   });
+
+  server.get('/:id', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    handler: leadsController.getById.bind(leadsController),
+  });
 };

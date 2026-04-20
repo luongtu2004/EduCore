@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { 
   Plus, MoreHorizontal, Phone, MessageSquare, 
   Search, Filter, ChevronRight, DollarSign,
-  User, Clock, AlertCircle
+  User, Clock, AlertCircle, Home
 } from 'lucide-react';
 import { motion, Reorder } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const initialColumns = [
   { id: 'new', title: 'Mới tiếp nhận', color: 'bg-blue-500', leads: [
@@ -31,11 +32,27 @@ export default function CRMPipelinePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-400 p-8 flex flex-col overflow-hidden h-screen">
+      {/* BREADCRUMBS */}
+      <nav className="flex items-center gap-2 mb-6 text-[10px] font-black uppercase tracking-widest text-slate-600 shrink-0">
+        <Link href="/admin" className="hover:text-emerald-500 transition-colors flex items-center gap-1.5">
+          <Home className="h-3 w-3" /> Dashboard
+        </Link>
+        <ChevronRight className="h-3 w-3 opacity-30" />
+        <Link href="/admin/crm" className="hover:text-emerald-500 transition-colors">
+          CRM
+        </Link>
+        <ChevronRight className="h-3 w-3 opacity-30" />
+        <span className="text-white">Phễu bán hàng</span>
+      </nav>
+
       {/* HEADER */}
       <div className="flex items-center justify-between mb-8 shrink-0">
-        <div>
-           <h1 className="text-2xl font-black text-white tracking-tight uppercase">Phễu bán hàng (Pipeline)</h1>
-           <p className="text-[10px] font-bold text-slate-600 mt-1 uppercase tracking-widest">Kéo thả để cập nhật trạng thái khách hàng</p>
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-2.5 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-tight uppercase leading-none">Phễu bán hàng (Pipeline)</h1>
+            <p className="text-[10px] font-bold text-slate-600 mt-2 uppercase tracking-widest leading-none">Kéo thả để cập nhật trạng thái khách hàng</p>
+          </div>
         </div>
         <div className="flex items-center gap-4">
            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2">

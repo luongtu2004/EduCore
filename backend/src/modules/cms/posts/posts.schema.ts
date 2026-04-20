@@ -5,6 +5,7 @@ export const PostStatusList = ['DRAFT', 'PUBLISHED', 'ARCHIVED'] as const;
 
 export const createPostSchema = z.object({
   title: z.string().min(1, 'Tiêu đề không được để trống'),
+  slug: z.string().min(1, 'Slug không được để trống'),
   summary: z.string().optional(),
   content: z.string().min(1, 'Nội dung không được để trống'),
   thumbnail: z.string().optional(),

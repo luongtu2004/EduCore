@@ -17,6 +17,12 @@ import { mediaRoutes } from './modules/cms/media/media.routes';
 import { learningPathRoutes } from './modules/learning-path/learning-path.routes';
 import { courseRoutes } from './modules/crm/courses/courses.routes';
 import { publicQuizRoutes } from './modules/cms/quiz/public-quiz.routes';
+import { quizManagementRoutes } from './modules/cms/quiz/quiz-management.routes';
+import { courseManagementRoutes } from './modules/cms/courses/courses.routes';
+import { categoriesRoutes } from './modules/cms/categories/categories.routes';
+import { faqRoutes } from './modules/cms/faqs/faqs.routes';
+import { bannerRoutes } from './modules/cms/banners/banners.routes';
+import { testimonialRoutes } from './modules/cms/testimonials/testimonials.routes';
 
 const app = fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
@@ -33,9 +39,10 @@ app.register(fastifySocketIO, {
   },
 });
 
-// Serve static files
+// Serve static files - Sử dụng path.resolve để đảm bảo đường dẫn tuyệt đối chính xác
+const publicUploadsDir = path.resolve(__dirname, '../../public/uploads');
 app.register(fastifyStatic, {
-  root: path.join(__dirname, '../public/uploads'),
+  root: publicUploadsDir,
   prefix: '/uploads/',
 });
 
@@ -48,6 +55,12 @@ app.register(mediaRoutes, { prefix: '/api/v1/media' });
 app.register(learningPathRoutes, { prefix: '/api/v1/learning-paths' });
 app.register(courseRoutes, { prefix: '/api/v1/crm/courses' });
 app.register(publicQuizRoutes, { prefix: '/api/v1/public/quiz' });
+app.register(quizManagementRoutes, { prefix: '/api/v1/cms/quiz' });
+app.register(courseManagementRoutes, { prefix: '/api/v1/cms/courses' });
+app.register(categoriesRoutes, { prefix: '/api/v1/cms/categories' });
+app.register(faqRoutes, { prefix: '/api/v1/cms/faqs' });
+app.register(bannerRoutes, { prefix: '/api/v1/cms/banners' });
+app.register(testimonialRoutes, { prefix: '/api/v1/cms/testimonials' });
 
 app.get('/health', async () => ({ status: 'ok', service: 'EduCore' }));
 

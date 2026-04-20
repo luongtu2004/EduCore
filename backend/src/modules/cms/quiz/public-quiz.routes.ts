@@ -1,7 +1,15 @@
 import { FastifyInstance } from 'fastify';
+import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import { MongoClient, ObjectId } from 'mongodb';
 
-export async function publicQuizRoutes(app: FastifyInstance) {
+interface ExtendedApp extends FastifyInstance {
+  prisma: PrismaClient;
+}
+
+export async function publicQuizRoutes(app: ExtendedApp) {
+  const mongoClient = new MongoClient(process.env.DATABASE_URL || '');
+
   // Get all active questions for the test
   app.get('/questions', async (request, reply) => {
     const questions = await app.prisma.quizQuestion.findMany({
@@ -15,7 +23,7 @@ export async function publicQuizRoutes(app: FastifyInstance) {
   app.post('/submit', async (request, reply) => {
     const schema = z.object({
       fullName: z.string().min(1),
-      phone: z.string().min(10),
+      phone: z.string().min(1),
       email: z.string().email().optional().or(z.literal('')),
       answers: z.array(z.number()), // Array of weight indices or scores
     });
@@ -39,36 +47,50 @@ export async function publicQuizRoutes(app: FastifyInstance) {
       course = "IELTS Intensive 5.5";
     }
 
-    // CRM: Create Lead
-    const lead = await app.prisma.lead.create({
-      data: {
+    try {
+      await mongoClient.connect();
+      const db = mongoClient.db();
+      
+      // CRM: Create Lead (Native)
+      const leadResult = await db.collection('crm_leads').insertOne({
         fullName: body.fullName,
         phone: body.phone,
         email: body.email || null,
         source: 'AI_TEST',
         status: 'NEW',
         note: `Kết quả Test AI (Hệ thống): ${level} - Điểm: ${totalScore}`,
-      }
-    });
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
 
-    // CRM: Save Quiz Result
-    await app.prisma.quizResult.create({
-      data: {
-        leadId: lead.id,
+      const leadId = leadResult.insertedId;
+
+      // CRM: Save Quiz Result (Native)
+      await db.collection('crm_quiz_results').insertOne({
+        leadId: leadId,
         score: totalScore,
         level: level,
-        answers: body.answers as any
-      }
-    });
+        answers: body.answers,
+        createdAt: new Date()
+      });
 
-    return { 
-      success: true, 
-      data: { 
-        level, 
-        course, 
-        score: totalScore,
-        leadId: lead.id 
-      } 
-    };
+      // Activity Log (Native)
+      await db.collection('ActivityLog').insertOne({
+        leadId: leadId,
+        type: 'CREATED',
+        content: `Lead mới đăng ký từ AI_TEST`,
+        createdAt: new Date()
+      });
+
+      return { 
+        success: true, 
+        data: { 
+          level, 
+          course, 
+          score: totalScore,
+          leadId: leadId.toString()
+        } 
+      };
+    } finally {}
   });
 }

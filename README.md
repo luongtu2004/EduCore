@@ -8,7 +8,7 @@ Dự án nền tảng kết nối người dùng có nhu cầu tìm kiếm dịc
 - **Backend**: FastAPI, Python 3.10+, PostgreSQL, SQLAlchemy ORM. Cung cấp hệ thống RESTful API tĩnh ổn định và hiệu năng cao.
 - **Security & Authorization**: Sử dụng JSON Web Tokens (JWT) với Access Token và Refresh Token cho hệ thống xác thực. Khóa mật khẩu được mã hóa an toàn bằng thuật toán BCrypt.
 
----
+---haha
 
 ## 3. Hướng Dẫn Cài Đặt và Khởi Chạy (Setup & Run)
 

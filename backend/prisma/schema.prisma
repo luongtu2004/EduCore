@@ -94,6 +94,7 @@ model Course {
   isActive      Boolean        @default(true)
   
   enrollments   Enrollment[]
+  chapters      Chapter[]
   
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -154,7 +155,7 @@ model Post {
   author          User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   
   categoryId      String     @db.ObjectId
-  category        Category   @relation(fields: [categoryId], references: [id])
+  category        Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   
   seoTitle        String?
   seoDescription  String?
@@ -234,4 +235,69 @@ model LearningPathStep {
   updatedAt      DateTime     @updatedAt
 
   @@map("learning_path_steps")
+}
+
+model FAQ {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  question  String
+  answer    String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cms_faqs")
+}
+
+model Banner {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  subtitle  String?
+  image     String
+  link      String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cms_banners")
+}
+
+model Chapter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  order     Int      @default(0)
+  courseId  String   @db.ObjectId
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("course_chapters")
+}
+
+model Lesson {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String?
+  videoUrl  String?
+  duration  String?
+  order     Int      @default(0)
+  chapterId String   @db.ObjectId
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("course_lessons")
+}
+
+model Media {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileName  String
+  url       String   @unique
+  size      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("media")
 }

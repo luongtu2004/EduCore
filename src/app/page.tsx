@@ -4,13 +4,14 @@ import {
   ArrowRight, BookOpen, Users, Star, 
   CheckCircle, Play, Sparkles, GraduationCap, 
   Building2, Trophy, Clock, Image as ImageIcon, MessageCircle,
-  Loader2, Zap
+  Loader2, Zap, HelpCircle, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PublicHeader } from '@/components/layout/public-header';
 import { PublicFooter } from '@/components/layout/public-footer';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
 
@@ -29,99 +30,144 @@ const stats = [
 
 export default function Home() {
   const [courses, setCourses] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchData = async () => {
       try {
-        const response: any = await api.get('/crm/courses');
-        if (response.success) {
-          setCourses(response.data);
+        const [coursesRes, bannersRes, faqsRes, testimonialsRes]: any = await Promise.all([
+          api.get('/crm/courses'),
+          api.get('/cms/banners'),
+          api.get('/cms/faqs'),
+          api.get('/cms/testimonials')
+        ]);
+        
+        if (coursesRes.success) setCourses(coursesRes.data);
+        if (bannersRes.success) {
+          const activeBanners = bannersRes.data.filter((b: any) => b.isActive);
+          setBanners(activeBanners);
+        }
+        if (faqsRes.success) setFaqs(faqsRes.data);
+        if (testimonialsRes.success) {
+          setTestimonials(testimonialsRes.data.filter((t: any) => t.isActive));
         }
       } catch (error) {
-        console.error('Error fetching courses:', error);
+        console.error('Error fetching home data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchCourses();
+    fetchData();
   }, []);
+
+  // Auto-slide banners
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBanner(prev => (prev + 1) % banners.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [banners.length]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <PublicHeader />
       
       <main className="flex-1">
-        {/* HERO SECTION */}
-        <section className="relative overflow-hidden pt-32 pb-24 lg:pt-56 lg:pb-40">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 overflow-hidden">
-             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] bg-emerald-50 rounded-full blur-[120px] opacity-60" />
-             <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[50%] bg-green-50 rounded-full blur-[100px] opacity-60" />
-          </div>
+        {/* DYNAMIC BANNER SLIDER */}
+        <section className="relative h-[85vh] lg:h-[95vh] overflow-hidden bg-slate-900">
+           <AnimatePresence mode="wait">
+              {banners.length > 0 ? (
+                <motion.div
+                  key={currentBanner}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                  className="absolute inset-0"
+                >
+                   {/* Background Image with Overlay */}
+                   <div className="absolute inset-0 z-0">
+                      <img 
+                        src={banners[currentBanner].imageUrl} 
+                        alt={banners[currentBanner].title}
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                   </div>
 
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
-              <motion.div 
-                initial="initial"
-                whileInView="animate"
-                viewport={{ once: true }}
-                className="relative z-10 space-y-10"
-              >
-                <motion.div 
-                  variants={fadeInUp}
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-100/50 px-4 py-2 text-sm font-black text-emerald-800 shadow-sm border border-emerald-200"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  HỆ THỐNG ĐÀO TẠO TIẾNG ANH CAO CẤP
-                </motion.div>
-                
-                <motion.h1 
-                  variants={fadeInUp}
-                  className="text-5xl font-black tracking-tight text-slate-900 sm:text-7xl leading-[1.1]"
-                >
-                  Chinh phục IELTS <br />
-                  <span className="bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent italic">Nâng tầm sự nghiệp</span>
-                </motion.h1 >
-                
-                <motion.p 
-                  variants={fadeInUp}
-                  className="max-w-xl text-lg md:text-xl leading-relaxed text-slate-600 font-medium"
-                >
-                  Hệ thống đào tạo Anh ngữ cá nhân hóa bằng AI, lộ trình tối ưu và cam kết đầu ra bằng văn bản. Chúng tôi đồng hành cùng bạn trên con đường kiến tạo tương lai.
-                </motion.p>
-                
-                <motion.div variants={fadeInUp} className="flex flex-wrap gap-5">
-                  <Link href="/contact">
-                    <Button size="lg" className="h-16 rounded-2xl px-10 text-lg font-black shadow-2xl shadow-emerald-200 bg-gradient-to-r from-emerald-600 to-green-600 gap-3 transition-all hover:scale-105 active:scale-95">
-                      TƯ VẤN LỘ TRÌNH <ArrowRight className="h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <Link href="/courses">
-                    <Button size="lg" variant="outline" className="h-16 rounded-2xl px-10 text-lg font-black border-2 border-slate-200 transition-all hover:bg-slate-50 hover:border-slate-900">
-                      CÁC KHÓA HỌC
-                    </Button>
-                  </Link>
-                </motion.div>
-              </motion.div>
+                   {/* Content */}
+                   <div className="relative z-10 mx-auto max-w-7xl px-6 h-full flex flex-col justify-center">
+                      <div className="max-w-3xl space-y-8">
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-4 py-2 text-sm font-black text-emerald-400 border border-emerald-500/20 backdrop-blur-md"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          HỆ THỐNG ĐÀO TẠO TIẾNG ANH CAO CẤP
+                        </motion.div>
 
-              {/* Right Visual - HERO IMAGE */}
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-                className="relative lg:ml-12"
-              >
-                <div className="relative aspect-square rounded-[4rem] bg-emerald-50 overflow-hidden shadow-2xl ring-1 ring-emerald-100 group">
-                    <img 
-                      src="/images/hero.png" 
-                      alt="EduCore Hero" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                        <motion.h1
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="text-6xl font-black tracking-tight text-white lg:text-8xl leading-tight uppercase italic"
+                        >
+                          {banners[currentBanner].title.split(' ').slice(0, -2).join(' ')} <br />
+                          <span className="text-emerald-500">{banners[currentBanner].title.split(' ').slice(-2).join(' ')}</span>
+                        </motion.h1>
+
+                        <motion.p
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.7 }}
+                          className="text-xl text-slate-300 font-medium leading-relaxed max-w-2xl"
+                        >
+                          {banners[currentBanner].subtitle}
+                        </motion.p>
+
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.9 }}
+                          className="flex flex-wrap gap-5"
+                        >
+                          <Link href={banners[currentBanner].link || '/courses'}>
+                            <Button size="lg" className="h-16 rounded-2xl px-10 text-lg font-black shadow-2xl shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 border-none gap-3">
+                              KHÁM PHÁ NGAY <ArrowRight className="h-5 w-5" />
+                            </Button>
+                          </Link>
+                        </motion.div>
+                      </div>
+                   </div>
+                </motion.div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-12 w-12 text-emerald-500 animate-spin" />
                 </div>
-              </motion.div>
-            </div>
-          </div>
+              )}
+           </AnimatePresence>
+
+           {/* SLIDER DOTS */}
+           <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+              {banners.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentBanner(idx)}
+                  className={cn(
+                    "h-2 transition-all rounded-full",
+                    currentBanner === idx ? "w-12 bg-emerald-500" : "w-2 bg-white/20 hover:bg-white/40"
+                  )}
+                />
+              ))}
+           </div>
         </section>
 
         {/* COURSES SECTION - DYNAMIC FROM MONGODB */}
@@ -220,40 +266,97 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { name: 'Nguyễn Thu Trang', score: '8.0 IELTS', text: 'Nhờ lộ trình cá nhân hóa, mình đã vượt qua nỗi sợ Speaking và đạt điểm số mong đợi chỉ sau 3 tháng.', image: '/images/student-1.png' },
-                { name: 'Trần Minh Quân', score: '7.5 IELTS', text: 'Hệ thống học tập cực kỳ hiện đại, đội ngũ giáo viên nhiệt tình và luôn hỗ trợ kịp thời.', image: '/images/student-2.png' },
-                { name: 'Lê Thảo Vy', score: '8.5 IELTS', text: 'Chưa từng nghĩ mình có thể đạt 8.5 Listening. Bí quyết Shadowing từ EduCore thực sự thần kỳ!', image: '/images/student-3.png' },
-              ].map((review, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  viewport={{ once: true }}
-                  className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200 border border-slate-100 flex flex-col gap-6"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-2xl bg-slate-200 overflow-hidden ring-4 ring-emerald-50">
-                      <img src={review.image} alt={review.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-slate-900 uppercase tracking-tight">{review.name}</h4>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded-full">{review.score}</span>
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => <Star key={i} className="h-3 w-3 fill-current" />)}
+              {testimonials.length > 0 ? (
+                testimonials.map((review, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    viewport={{ once: true }}
+                    className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200 border border-slate-100 flex flex-col gap-6"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 rounded-2xl bg-slate-200 overflow-hidden ring-4 ring-emerald-50">
+                        <img src={review.image} alt={review.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900 uppercase tracking-tight">{review.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded-full">{review.score}</span>
+                          <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => <Star key={i} className="h-3 w-3 fill-current" />)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <p className="text-slate-600 font-bold leading-relaxed italic">"{review.text}"</p>
-                  <div className="pt-4 border-t border-slate-50 flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
-                    <CheckCircle className="h-4 w-4 text-emerald-500" />
-                    Đã xác thực kết quả
-                  </div>
-                </motion.div>
-              ))}
+                    <p className="text-slate-600 font-bold leading-relaxed italic">"{review.text}"</p>
+                    <div className="pt-4 border-t border-slate-50 flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      Đã xác thực kết quả
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-3 py-20 text-center opacity-30">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Đang cập nhật câu chuyện thành công...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* DYNAMIC FAQs SECTION - NEW */}
+        <section className="bg-white py-24 lg:py-32">
+          <div className="mx-auto max-w-7xl px-6">
+            <div className="flex flex-col lg:flex-row gap-16">
+              <div className="lg:w-1/3 space-y-6">
+                <div className="h-1.5 w-12 bg-emerald-500 rounded-full" />
+                <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-[1.1]">
+                  Giải đáp <br /> Thắc mắc <br /> thường gặp
+                </h2>
+                <p className="text-slate-500 font-bold leading-relaxed">
+                  Bạn vẫn còn băn khoăn? Đừng ngần ngại liên hệ với chúng tôi để được tư vấn lộ trình học tập miễn phí.
+                </p>
+                <div className="pt-4">
+                  <Link href="/contact">
+                    <Button className="rounded-full h-14 px-8 font-black text-xs uppercase tracking-widest gap-2 bg-slate-900 shadow-2xl shadow-slate-200">
+                      Liên hệ tư vấn ngay <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="lg:w-2/3 space-y-4">
+                {faqs.length > 0 ? (
+                  faqs.filter((f: any) => f.isActive).map((faq: any, idx: number) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      viewport={{ once: true }}
+                      className="group p-8 rounded-[2rem] border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-emerald-200 transition-all shadow-sm hover:shadow-xl hover:shadow-slate-200/50"
+                    >
+                      <div className="flex items-start gap-4">
+                         <div className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-1">
+                            <HelpCircle className="h-4 w-4" />
+                         </div>
+                         <div>
+                            <h4 className="text-lg font-black text-slate-800 leading-tight mb-2 uppercase italic">{faq.question}</h4>
+                            <p className="text-slate-500 font-medium leading-relaxed italic">
+                              {faq.answer}
+                            </p>
+                         </div>
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                   <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem]">
+                      <p className="text-xs font-black text-slate-300 uppercase tracking-widest">Đang cập nhật nội dung giải đáp...</p>
+                   </div>
+                )}
+              </div>
             </div>
           </div>
         </section>

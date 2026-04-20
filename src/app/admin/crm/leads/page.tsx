@@ -4,9 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ClipboardList, Search, Filter, Plus,
   Phone, Mail, MessageSquare, Edit, Trash2,
-  ChevronLeft, ChevronRight, Clock, Sparkles,
+  ChevronLeft, ChevronRight as ChevronRightIcon, Clock, Sparkles,
   BookOpen, LayoutGrid, CheckCircle2, AlertCircle,
-  X, ChevronDown
+  X, ChevronDown, Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -71,11 +71,27 @@ export default function CRMLeadsPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-400 p-8">
+      {/* BREADCRUMBS */}
+      <nav className="flex items-center gap-2 mb-6 text-[10px] font-black uppercase tracking-widest text-slate-600">
+        <Link href="/admin" className="hover:text-emerald-500 transition-colors flex items-center gap-1.5">
+          <Home className="h-3 w-3" /> Dashboard
+        </Link>
+        <ChevronRightIcon className="h-3 w-3 opacity-30" />
+        <Link href="/admin/crm" className="hover:text-emerald-500 transition-colors">
+          CRM
+        </Link>
+        <ChevronRightIcon className="h-3 w-3 opacity-30" />
+        <span className="text-white">Quản lý Leads</span>
+      </nav>
+
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic">Quản lý Leads</h1>
-          <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">Theo dõi và chuyển đổi khách hàng tiềm năng</p>
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-2.5 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.4)]" />
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-tighter uppercase italic leading-none">Quản lý Leads</h1>
+            <p className="text-xs font-bold text-slate-500 mt-2 uppercase tracking-widest leading-none">Theo dõi và chuyển đổi khách hàng tiềm năng</p>
+          </div>
         </div>
         <Button className="h-12 rounded-xl bg-emerald-600 text-white px-8 font-black text-xs shadow-lg shadow-emerald-900/20 hover:scale-105 transition-all border-none gap-2">
           <Plus className="h-4 w-4" /> THÊM LEAD MỚI
@@ -180,6 +196,7 @@ export default function CRMLeadsPage() {
           <thead>
             <tr className="border-b border-white/5 bg-white/5">
               <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Khách hàng & Khóa học</th>
+              <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Kết quả AI</th>
               <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Liên hệ</th>
               <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Trạng thái</th>
               <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Ngày tạo</th>
@@ -223,6 +240,16 @@ export default function CRMLeadsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-6">
+                       {lead.quizResult ? (
+                         <div className="space-y-1">
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{lead.quizResult.level}</p>
+                            <p className="text-[8px] font-bold text-slate-500">ĐIỂM HỆ THỐNG: {lead.quizResult.score}</p>
+                         </div>
+                       ) : (
+                         <span className="text-[10px] font-bold text-slate-700 italic">Chưa làm test</span>
+                       )}
+                    </td>
+                    <td className="px-6 py-6">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 text-xs font-bold text-gray-500 group-hover:text-gray-300 transition-colors">
                           <Mail className="h-3.5 w-3.5 text-gray-700" /> {lead.email}
@@ -249,11 +276,11 @@ export default function CRMLeadsPage() {
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                        <Button size="icon" className="h-10 w-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/20">
+                        <Button size="icon" className="h-9 w-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/20">
                           <Phone className="h-4 w-4" />
                         </Button>
                         <Link href={`/admin/crm/leads/${lead.id}`}>
-                          <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-white/5 bg-white/5 hover:bg-white/10 text-gray-500">
+                          <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-white/5 bg-white/5 hover:bg-white/10 text-gray-500">
                             <Edit className="h-4 w-4" />
                           </Button>
                         </Link>
@@ -276,8 +303,8 @@ export default function CRMLeadsPage() {
         <div className="px-8 py-6 bg-white/5 flex items-center justify-between border-t border-white/5">
           <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">Hiển thị {filteredLeads.length} dữ liệu</p>
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-white/5 bg-white/5 text-gray-500 hover:text-white"><ChevronLeft className="h-5 w-5" /></Button>
-            <Button variant="outline" size="icon" className="h-10 w-10 rounded-xl border-white/5 bg-white/5 text-gray-500 hover:text-white"><ChevronRight className="h-5 w-5" /></Button>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white"><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white"><ChevronRightIcon className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>

@@ -3,16 +3,26 @@ import bcrypt from 'bcryptjs';
 import { LoginInput } from './auth.schema';
 import { AppError } from '../../common/errors/AppError';
 
+import { FastifyInstance } from 'fastify';
+import bcrypt from 'bcryptjs';
+import { LoginInput } from './auth.schema';
+import { AppError } from '../../common/errors/AppError';
+import { MongoClient, ObjectId } from 'mongodb';
+
 export class AuthService {
-  constructor(private server: FastifyInstance) {}
+  private mongoClient: MongoClient;
+
+  constructor(private server: FastifyInstance) {
+    this.mongoClient = new MongoClient(process.env.DATABASE_URL || '');
+  }
 
   async login(input: LoginInput) {
     console.log('--- Bắt đầu đăng nhập cho email:', input.email);
     
     try {
-      const user = await this.server.prisma.user.findUnique({
-        where: { email: input.email },
-      });
+      await this.mongoClient.connect();
+      const db = this.mongoClient.db();
+      const user = await db.collection('users').findOne({ email: input.email });
 
       if (!user) {
         console.log('! Không tìm thấy người dùng');
@@ -32,33 +42,20 @@ export class AuthService {
       }
 
       const accessToken = this.server.jwt.sign(
-        { id: user.id, role: user.role },
+        { id: user._id.toString(), role: user.role },
         { expiresIn: '1h' }
       );
 
       const refreshToken = this.server.jwt.sign(
-        { id: user.id },
+        { id: user._id.toString() },
         { expiresIn: '7d' }
       );
-
-      console.log('- Đã tạo Tokens');
-
-      // Tạm thời bỏ qua việc lưu vào DB để tránh lỗi 500 do bảng RefreshToken
-      /*
-      await this.server.prisma.refreshToken.create({
-        data: {
-          token: refreshToken,
-          userId: user.id,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      });
-      */
 
       console.log('--- Đăng nhập thành công!');
 
       return {
         user: {
-          id: user.id,
+          id: user._id.toString(),
           fullName: user.fullName,
           email: user.email,
           role: user.role,
@@ -73,48 +70,45 @@ export class AuthService {
   }
 
   async logout(token: string) {
-    await this.server.prisma.refreshToken.delete({
-      where: { token },
-    }).catch(() => {});
+    // Tạm thời bỏ qua xóa refreshToken trong DB
   }
 
   async getAllUsers() {
-    return this.server.prisma.user.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    await this.mongoClient.connect();
+    const db = this.mongoClient.db();
+    const users = await db.collection('users').find({}).sort({ createdAt: -1 }).toArray();
+    return users.map(u => ({
+      ...u,
+      id: u._id.toString()
+    }));
   }
 
   async createUser(data: any) {
     try {
       console.log('--- Đang tạo nhân sự mới:', data.email);
+      await this.mongoClient.connect();
+      const db = this.mongoClient.db();
+      
+      const existing = await db.collection('users').findOne({ email: data.email });
+      if (existing) throw new AppError(400, 'Email này đã tồn tại trong hệ thống');
+
       const hashedPassword = await bcrypt.hash(data.password, 10);
       
-      const user = await this.server.prisma.user.create({
-        data: {
-          fullName: data.fullName,
-          email: data.email,
-          phone: data.phone,
-          password: hashedPassword,
-          role: data.role,
-          isActive: true,
-        },
+      const result = await db.collection('users').insertOne({
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        password: hashedPassword,
+        role: data.role,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
 
       console.log('--- Tạo nhân sự thành công!');
-      return user;
+      return { id: result.insertedId, ...data };
     } catch (error: any) {
       console.error('!!! LỖI KHI TẠO NHÂN SỰ:', error.message);
-      if (error.code === 'P2002') {
-        throw new AppError(400, 'Email này đã tồn tại trong hệ thống');
-      }
       throw error;
     }
   }
@@ -123,39 +117,31 @@ export class AuthService {
     if (data.password) {
       data.password = await bcrypt.hash(data.password, 10);
     }
-    return this.server.prisma.user.update({
-      where: { id },
-      data,
-    });
+    
+    await this.mongoClient.connect();
+    const db = this.mongoClient.db();
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(id) as any },
+      { $set: { ...data, updatedAt: new Date() } }
+    );
+    return { success: true };
   }
 
   async deleteUser(id: string) {
     try {
       console.log('--- Đang xóa cưỡng chế nhân viên ID:', id);
-      const db = (this.server.prisma as any)._engine.datamodel.datasources[0].name; // Trick để lấy DB name nếu cần, nhưng ta dùng prisma.$runCommand hoặc tương tự
+      await this.mongoClient.connect();
+      const db = this.mongoClient.db();
       
-      // Cách an toàn nhất: Dùng Prisma nhưng tách riêng từng lệnh và bắt lỗi từng lệnh
-      try {
-        await this.server.prisma.refreshToken.deleteMany({ where: { userId: id } });
-      } catch (e) { console.log('Không có RefreshTokens để xóa'); }
-
-      try {
-        await this.server.prisma.post.deleteMany({ where: { authorId: id } });
-      } catch (e) { console.log('Không có Posts để xóa'); }
-
-      // Xóa User cuối cùng
-      const result = await this.server.prisma.user.delete({
-        where: { id },
-      });
+      await db.collection('refresh_tokens').deleteMany({ userId: id });
+      await db.collection('posts').deleteMany({ authorId: id });
+      await db.collection('users').deleteOne({ _id: new ObjectId(id) as any });
       
       console.log('--- Xóa cưỡng chế thành công!');
-      return result;
+      return { success: true };
     } catch (error: any) {
       console.error('!!! LỖI KHI XÓA CƯỠNG CHẾ:', error.message);
-      // Nếu vẫn lỗi, ta dùng deleteMany để tránh lỗi "Record not found"
-      return this.server.prisma.user.deleteMany({
-        where: { id },
-      });
+      throw error;
     }
   }
 }

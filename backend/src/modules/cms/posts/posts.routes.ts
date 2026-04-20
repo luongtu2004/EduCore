@@ -29,4 +29,18 @@ export const postRoutes: FastifyPluginAsyncZod = async (server) => {
     schema: { body: createCategorySchema },
     handler: postsController.createCategory.bind(postsController),
   });
+
+  server.patch('/:id', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    handler: postsController.update.bind(postsController),
+  });
+
+  server.delete('/:id', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    handler: postsController.delete.bind(postsController),
+  });
 };

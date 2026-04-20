@@ -15,9 +15,17 @@ export class LeadsController {
     return reply.status(201).send({ success: true, data: lead });
   }
 
-  async updateStatus(request: FastifyRequest<{ Params: { id: string }, Body: UpdateLeadStatusInput }>, reply: FastifyReply) {
-    const user = request.user as { id: string };
-    const lead = await this.leadsService.updateStatus(request.params.id, request.body, user.id);
-    return reply.send({ success: true, data: lead });
+  async updateStatus(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const body = request.body as any;
+    const user = request.user as any;
+    const result = await this.leadsService.updateStatus(id, body, user.id);
+    return { success: true, data: result };
+  }
+
+  async getById(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const result = await this.leadsService.getById(id);
+    return { success: true, data: result };
   }
 }

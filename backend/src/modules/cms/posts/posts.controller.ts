@@ -5,9 +5,14 @@ import { CreatePostInput, CreateCategoryInput } from './posts.schema';
 export class PostsController {
   constructor(private postsService: PostsService) {}
 
-  async listPublic(request: FastifyRequest, reply: FastifyReply) {
-    const posts = await this.postsService.getPublicPosts();
-    return reply.send({ success: true, data: posts });
+  async listPublic(request: FastifyRequest<{ Querystring: { page?: string, limit?: string, category?: string } }>, reply: FastifyReply) {
+    const { page, limit, category } = request.query;
+    const result = await this.postsService.getPublicPosts(
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 12,
+      category
+    );
+    return reply.send({ success: true, ...result });
   }
 
   async getDetail(request: FastifyRequest<{ Params: { slug: string } }>, reply: FastifyReply) {
@@ -35,5 +40,15 @@ export class PostsController {
   async list(request: FastifyRequest, reply: FastifyReply) {
     const posts = await this.postsService.getAllPosts();
     return reply.send({ success: true, data: posts });
+  }
+
+  async update(request: FastifyRequest<{ Params: { id: string }, Body: Partial<CreatePostInput> }>, reply: FastifyReply) {
+    const post = await this.postsService.updatePost(request.params.id, request.body);
+    return reply.send({ success: true, data: post });
+  }
+
+  async delete(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    await this.postsService.deletePost(request.params.id);
+    return reply.send({ success: true, message: 'Đã xóa bài viết' });
   }
 }
