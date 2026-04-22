@@ -155,92 +155,121 @@ export default function PostsPage() {
           <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none group-hover:text-emerald-500 transition-colors" />
         </div>
       </div>
+      {/* DATA TABLE */}
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden mb-10">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-50 bg-[#f1f5f9]/30">
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Bài viết</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Danh mục</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Cập nhật</th>
+                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={4} className="px-8 py-6 h-20 bg-slate-50/20" />
+                  </tr>
+                ))
+              ) : paginatedPosts.length > 0 ? (
+                paginatedPosts.map((post, idx) => (
+                  <motion.tr
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.03 }}
+                    key={post.id}
+                    className="group hover:bg-slate-50 transition-all cursor-pointer relative"
+                  >
+                    <td className="px-8 py-6 relative">
+                      {/* HOVER INDICATOR BAR */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* LIST HEADERS */}
-      <div className="grid grid-cols-12 px-8 mb-5 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
-        <div className="col-span-6">TIÊU ĐỀ BÀI VIẾT</div>
-        <div className="col-span-2 text-center">DANH MỤC</div>
-        <div className="col-span-2 text-center">CẬP NHẬT</div>
-        <div className="col-span-2 text-right">THAO TÁC</div>
-      </div>
-
-      {/* ARTICLES LIST - CARD BASED */}
-      <div className="space-y-3 mb-10">
-        {isLoading ? (
-          Array(4).fill(0).map((_, i) => (
-            <div key={i} className="h-24 bg-white rounded-xl animate-pulse border border-slate-100" />
-          ))
-        ) : paginatedPosts.length > 0 ? (
-          paginatedPosts.map((post, idx) => (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              key={post.id}
-              className="group bg-white rounded-xl p-5 shadow-sm border border-transparent hover:border-emerald-500/10 hover:shadow-lg hover:shadow-slate-200/30 transition-all grid grid-cols-12 items-center gap-4"
-            >
-              <div className="col-span-6 flex items-center gap-5">
-                <div className="h-12 w-12 rounded-xl bg-[#eff6ff] flex items-center justify-center text-[#60a5fa] shrink-0 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-600 transition-colors truncate mb-0.5">{post.title}</h3>
-                  <p className="text-[11px] text-slate-400 font-medium tracking-tight">/{post.slug}</p>
-                </div>
-              </div>
-              <div className="col-span-2 flex justify-center">
-                <span className="px-3.5 py-1 rounded-md bg-[#dbeafe] text-[#1e40af] text-[9px] font-black uppercase tracking-widest">
-                  {post.category?.name || 'KINH NGHIỆM HỌC TẬP'}
-                </span>
-              </div>
-              <div className="col-span-2 text-center">
-                <span className="text-sm font-bold text-slate-500">{new Date(post.updatedAt || post.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
-              </div>
-              <div className="col-span-2 flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
-                <Button variant="ghost" size="icon" onClick={() => handleView(post)} className="h-9 w-9 rounded-full hover:bg-emerald-50 text-slate-400 hover:text-emerald-600">
-                  <Eye className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(post)} className="h-9 w-9 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-900">
-                  <Edit2 className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(post.id)} className="h-9 w-9 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </motion.div>
-          ))
-        ) : (
-          <div className="py-24 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-            <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileText className="h-10 w-10 text-slate-200" />
-            </div>
-            <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.3em]">Không tìm thấy bài viết nào</p>
-          </div>
-        )}
-      </div>
-
-      {/* PAGINATION */}
-      <div className="flex items-center justify-center gap-10">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-          className="p-3 text-slate-400 hover:text-slate-900 disabled:opacity-10 transition-all hover:scale-110 active:scale-95"
-        >
-          <ChevronLeft className="h-8 w-8" />
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Trang</span>
-          <span className="h-10 min-w-[40px] px-3 flex items-center justify-center bg-white border border-slate-100 rounded-xl text-sm font-black text-slate-900 shadow-sm">{currentPage}</span>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">/</span>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{totalPages || 1}</span>
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg group-hover:scale-105 transition-transform shrink-0">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-900 group-hover:text-emerald-600 transition-colors leading-tight mb-1">{post.title}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-70">/{post.slug}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 text-center">
+                      <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-widest border border-emerald-100/50">
+                        {post.category?.name || 'BLOG'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-6 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <p className="text-sm font-black text-slate-600">{new Date(post.updatedAt || post.createdAt).toLocaleDateString('vi-VN')}</p>
+                        <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">NGÀY ĐĂNG</p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+                        <Button
+                          variant="ghost" size="icon"
+                          onClick={() => handleView(post)}
+                          className="h-9 w-9 rounded-full hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 shadow-sm transition-all"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          onClick={() => handleEdit(post)}
+                          className="h-9 w-9 rounded-full hover:bg-slate-900 hover:text-white text-slate-400 shadow-sm transition-all"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          onClick={() => handleDeleteClick(post.id)}
+                          className="h-9 w-9 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 shadow-sm transition-all"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="px-8 py-32 text-center opacity-30">
+                    <p className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Không tìm thấy bài viết</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-        <button
-          disabled={currentPage === totalPages || totalPages === 0}
-          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-          className="p-3 text-slate-400 hover:text-slate-900 disabled:opacity-10 transition-all hover:scale-110 active:scale-95"
-        >
-          <ChevronRight className="h-8 w-8" />
-        </button>
+
+        {/* PAGINATION */}
+        <div className="px-8 py-6 bg-[#f1f5f9]/50 flex items-center justify-between border-t border-slate-100">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            Hiển thị {paginatedPosts.length} / {filteredPosts.length} bài viết
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline" size="icon"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              className="h-9 w-9 rounded-full border-slate-200 bg-white text-slate-400 hover:text-emerald-600 disabled:opacity-20 transition-all"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline" size="icon"
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              className="h-9 w-9 rounded-full border-slate-200 bg-white text-slate-400 hover:text-emerald-600 disabled:opacity-20 transition-all"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       <PostModal

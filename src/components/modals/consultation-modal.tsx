@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, User, Phone, Mail, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/axios';
+import { toast } from 'react-hot-toast';
 
 interface ConsultationModalProps {
   isOpen: boolean;
@@ -26,18 +27,19 @@ export function ConsultationModal({ isOpen, onClose, courseName }: ConsultationM
     setLoading(true);
     try {
       const response: any = await api.post('/crm/leads/public', {
-        ...formData,
-        courseName,
-        source: 'Website - Đăng ký tư vấn',
-        status: 'NEW'
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        source: 'WEBSITE',
+        note: courseName ? `Quan tâm khóa học: ${courseName}` : 'Website - Đăng ký tư vấn',
       });
-      
+
       if (response.success) {
         setIsSubmitted(true);
       }
     } catch (error) {
       console.error('Error submitting consultation:', error);
-      alert('Có lỗi xảy ra, vui lòng thử lại sau.');
+      toast.error('Có lỗi xảy ra, vui lòng thử lại sau.');
     } finally {
       setLoading(false);
     }

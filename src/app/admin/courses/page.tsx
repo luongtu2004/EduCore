@@ -23,7 +23,7 @@ export default function CoursesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchCourses();
@@ -213,29 +213,34 @@ export default function CoursesPage() {
         )}
       </div>
 
-      {/* PAGINATION */}
-      <div className="flex items-center justify-center gap-10 mt-12">
-        <button 
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-          className="p-3 text-slate-400 hover:text-slate-900 disabled:opacity-10 transition-all hover:scale-110 active:scale-95"
-        >
-          <ChevronLeft className="h-8 w-8" />
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Trang</span>
-          <span className="h-10 min-w-[40px] px-3 flex items-center justify-center bg-white border border-slate-100 rounded-xl text-sm font-black text-slate-900 shadow-sm">{currentPage}</span>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">/</span>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{totalPages || 1}</span>
+      {/* PAGINATION BAR */}
+      {totalPages > 1 && (
+        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-8 py-6 bg-[#f1f5f9]/50 flex items-center justify-between">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Hiển thị {paginatedCourses.length} / {filteredCourses.length} khóa học
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" size="icon" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className="h-9 w-9 rounded-full border-slate-200 bg-white text-slate-400 hover:text-emerald-600 disabled:opacity-20 transition-all"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" size="icon"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                className="h-9 w-9 rounded-full border-slate-200 bg-white text-slate-400 hover:text-emerald-600 disabled:opacity-20 transition-all"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
-        <button 
-          disabled={currentPage === totalPages || totalPages === 0}
-          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-          className="p-3 text-slate-400 hover:text-slate-900 disabled:opacity-10 transition-all hover:scale-110 active:scale-95"
-        >
-          <ChevronRight className="h-8 w-8" />
-        </button>
-      </div>
+      )}
 
       <CourseModal
         isOpen={isModalOpen}

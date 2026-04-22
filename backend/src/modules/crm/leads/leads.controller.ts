@@ -28,4 +28,21 @@ export class LeadsController {
     const result = await this.leadsService.getById(id);
     return { success: true, data: result };
   }
+
+  async assignLead(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const body = request.body as any;
+    const user = request.user as any;
+    const result = await this.leadsService.assignLead(id, body, user.id);
+    return { success: true, data: result };
+  }
+
+  async delete(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const success = await this.leadsService.deleteLead(id);
+    if (!success) {
+      return reply.status(404).send({ success: false, message: 'Not found' });
+    }
+    return { success: true };
+  }
 }

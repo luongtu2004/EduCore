@@ -251,7 +251,7 @@ export default function QuizManagementPage() {
           })
         ) : (
           <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-200">
-            <p className="text-sm font-bold text-slate-400 italic">Không tìm thấy câu hỏi nào</p>
+            <p className="text-sm font-bold text-slate-400 opacity-60 uppercase tracking-widest">Không tìm thấy câu hỏi nào</p>
           </div>
         )}
       </div>

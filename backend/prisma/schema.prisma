@@ -69,9 +69,9 @@ model Student {
   leadId        String?        @unique @db.ObjectId
   
   studentCode   String         @unique
-  fullName      String
+  fullName      String?
   email         String?
-  phone         String
+  phone         String?
   status        String         @default("ACTIVE")
   
   enrollments   Enrollment[]
@@ -300,4 +300,42 @@ model Media {
   updatedAt DateTime @updatedAt
 
   @@map("media")
+}
+
+model Settings {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  siteName        String   @default("EduCore Academy")
+  siteTagline     String?
+  logo            String?
+  favicon         String?
+  
+  phone           String?
+  email           String?
+  address         String?
+  facebook        String?
+  zalo            String?
+  
+  seoTitle        String?
+  seoDescription  String?
+  seoKeywords     String?
+  
+  updatedAt       DateTime @updatedAt
+  
+  @@map("system_settings")
+}
+
+model Coupon {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  code        String   @unique
+  discount    String
+  type        String   @default("PERCENT") // PERCENT, FIXED
+  expiry      DateTime
+  usageCount  Int      @default(0)
+  maxUsage    Int      @default(100)
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cms_coupons")
 }

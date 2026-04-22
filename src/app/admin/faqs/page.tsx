@@ -138,10 +138,10 @@ export default function FAQsPage() {
               </div>
               
               <div className="flex-1 min-w-0">
-                <h3 className="text-xl font-black text-slate-900 leading-tight mb-2 uppercase italic">
+                <h3 className="text-xl font-black text-slate-900 leading-tight mb-2 uppercase">
                   {faq.question}
                 </h3>
-                <p className="text-sm font-medium text-slate-500 line-clamp-2 italic">{faq.answer}</p>
+                <p className="text-sm font-medium text-slate-500 line-clamp-2">{faq.answer}</p>
                 <div className="mt-4 flex items-center gap-4">
                   <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Cập nhật: {new Date(faq.updatedAt).toLocaleDateString('vi-VN')}</span>
                 </div>

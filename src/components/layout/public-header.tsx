@@ -122,7 +122,7 @@ export function PublicHeader() {
                             <Briefcase className="h-4 w-4 text-gray-400 group-hover:text-blue-500" />
                             Hệ thống CRM
                           </Link>
-                          <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-gray-600 hover:bg-purple-50 hover:text-purple-700 rounded-xl transition-all group">
+                          <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-gray-600 hover:bg-purple-50 hover:text-purple-700 rounded-xl transition-all group">
                             <User className="h-4 w-4 text-gray-400 group-hover:text-purple-500" />
                             Xem Profile
                           </Link>

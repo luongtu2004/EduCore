@@ -1,34 +1,103 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Plus, MoreHorizontal, Phone, MessageSquare, 
   Search, Filter, ChevronRight, DollarSign,
-  User, Clock, AlertCircle, Home
+  User, Clock, AlertCircle, Home, Loader2
 } from 'lucide-react';
-import { motion, Reorder } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import api from '@/lib/axios';
+import { toast } from 'react-hot-toast';
 
-const initialColumns = [
-  { id: 'new', title: 'Mới tiếp nhận', color: 'bg-blue-500', leads: [
-    { id: '1', name: 'Nguyễn Văn A', value: '5.000.000đ', time: '2h trước', staff: 'Admin' },
-    { id: '2', name: 'Trần Thị B', value: '12.000.000đ', time: '5h trước', staff: 'Sale 01' },
-  ]},
-  { id: 'called', title: 'Đã liên hệ', color: 'bg-orange-500', leads: [
-    { id: '3', name: 'Lê Văn C', value: '3.500.000đ', time: '1 ngày trước', staff: 'Sale 02' },
-  ]},
-  { id: 'consulted', title: 'Đã tư vấn', color: 'bg-purple-500', leads: [
-    { id: '4', name: 'Phạm Thị D', value: '25.000.000đ', time: '3 giờ trước', staff: 'Admin' },
-  ]},
-  { id: 'closed', title: 'Đã chốt', color: 'bg-emerald-500', leads: [
-    { id: '5', name: 'Hoàng Văn E', value: '45.000.000đ', time: '30 phút trước', staff: 'Sale 01' },
-  ]},
+const PIPELINE_COLUMNS = [
+  { id: 'NEW', title: 'Mới đăng ký', color: 'bg-emerald-500' },
+  { id: 'CONTACTED', title: 'Đã liên hệ', color: 'bg-blue-500' },
+  { id: 'CONSULTING', title: 'Đang tư vấn', color: 'bg-violet-500' },
+  { id: 'TRIAL_LEARNING', title: 'Học thử', color: 'bg-amber-500' },
+  { id: 'WON', title: 'Đã đăng ký HV', color: 'bg-teal-500' },
+  { id: 'LOST', title: 'Không tiếp cận', color: 'bg-slate-500' },
 ];
 
 export default function CRMPipelinePage() {
-  const [columns, setColumns] = useState(initialColumns);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Drag and Drop state
+  const [draggedItem, setDraggedItem] = useState<any>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const fetchLeads = async () => {
+    setIsLoading(true);
+    try {
+      const response: any = await api.get('/crm/leads');
+      if (response.success) {
+        setLeads(response.data);
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải leads:', error);
+      toast.error('Không thể tải dữ liệu phễu bán hàng.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDragStart = (lead: any) => {
+    setDraggedItem(lead);
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (statusId: string, e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (!draggedItem || draggedItem.status === statusId) return;
+
+    // Optimistic update
+    const previousLeads = [...leads];
+    setLeads(leads.map(l => l.id === draggedItem.id ? { ...l, status: statusId } : l));
+
+    try {
+      const response: any = await api.patch(`/crm/leads/${draggedItem.id}/status`, {
+        status: statusId,
+        note: 'Cập nhật từ Pipeline'
+      });
+      if (response.success) {
+        toast.success('Đã cập nhật trạng thái khách hàng');
+      } else {
+        throw new Error('API update failed');
+      }
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái:', error);
+      toast.error('Lỗi khi cập nhật trạng thái');
+      // Revert changes
+      setLeads(previousLeads);
+    }
+    setDraggedItem(null);
+  };
+
+  const filteredLeads = leads.filter(lead => 
+    lead.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    lead.phone?.includes(searchQuery)
+  );
+
+  const getLeadsByStatus = (status: string) => {
+    return filteredLeads.filter(l => (l.status || 'NEW') === status);
+  };
+
+  const totalPipelineValue = leads.reduce((acc, lead) => acc + (lead.finalPrice || 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-400 p-8 flex flex-col overflow-hidden h-screen">
@@ -57,85 +126,128 @@ export default function CRMPipelinePage() {
         <div className="flex items-center gap-4">
            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2">
               <DollarSign className="h-4 w-4 text-emerald-500" />
-              <span className="text-xs font-black text-white">Tổng giá trị phễu: 90.500.000đ</span>
+              <span className="text-xs font-black text-white">Tổng giá trị phễu: {totalPipelineValue.toLocaleString('vi-VN')}đ</span>
            </div>
-           <Button className="h-10 rounded-xl bg-emerald-600 text-white px-5 font-black text-[10px] tracking-widest uppercase hover:bg-emerald-500 border-none gap-2">
-             <Plus className="h-4 w-4" /> Thêm giao dịch
-           </Button>
+           <Link href="/admin/crm/leads">
+             <Button className="h-10 rounded-xl bg-emerald-600 text-white px-5 font-black text-[10px] tracking-widest uppercase hover:bg-emerald-500 border-none gap-2">
+               Quản lý Khách hàng
+             </Button>
+           </Link>
         </div>
       </div>
 
       {/* TOOLBAR */}
-      <div className="flex items-center justify-between mb-8 shrink-0">
-         <div className="relative group flex-1 max-w-md">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-600" />
-            <input 
-              type="text" 
-              placeholder="Tìm theo tên khách hàng..." 
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-emerald-500/30 transition-all text-white outline-none"
-            />
-         </div>
-         <div className="flex items-center gap-3">
-            <Button variant="ghost" className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white gap-2">
-               <Filter className="h-4 w-4" /> Lọc nhân viên
-            </Button>
-         </div>
+      <div className="flex items-center gap-4 mb-8 shrink-0">
+        <div className="flex-1 relative group w-full">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Tìm theo tên hoặc số điện thoại khách hàng..."
+            className="w-full h-14 pl-14 pr-5 rounded-2xl bg-slate-950/50 border border-white/5 hover:border-white/10 focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-base text-slate-200 placeholder:text-slate-600 outline-none shadow-inner"
+          />
+        </div>
       </div>
 
       {/* KANBAN BOARD */}
-      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 custom-scrollbar items-start">
-         {columns.map((column) => (
-           <div key={column.id} className="w-80 shrink-0 flex flex-col h-full bg-white/[0.02] border border-white/[0.05] rounded-[2rem] overflow-hidden">
-              <div className="p-5 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
-                 <div className="flex items-center gap-3">
-                    <div className={cn("h-2 w-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]", column.color)} />
-                    <h3 className="text-[11px] font-black text-white uppercase tracking-widest">{column.title}</h3>
-                    <span className="text-[10px] font-bold text-slate-600 bg-white/5 px-2 py-0.5 rounded-md">{column.leads.length}</span>
-                 </div>
-                 <button className="text-slate-600 hover:text-white transition-colors"><MoreHorizontal className="h-4 w-4" /></button>
-              </div>
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+           <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
+        </div>
+      ) : (
+        <div className="flex-1 flex gap-6 overflow-x-auto pb-4 custom-scrollbar items-start">
+           {PIPELINE_COLUMNS.map((column) => {
+             const columnLeads = getLeadsByStatus(column.id);
+             const columnValue = columnLeads.reduce((acc, lead) => acc + (lead.finalPrice || 0), 0);
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                 {column.leads.map((lead) => (
-                   <motion.div 
-                     layoutId={lead.id}
-                     key={lead.id} 
-                     className="bg-white/5 border border-white/10 p-5 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all group cursor-grab active:cursor-grabbing"
-                   >
-                      <div className="flex items-center justify-between mb-3">
-                         <span className="text-[10px] font-black text-emerald-500 tracking-tight">{lead.value}</span>
-                         <div className="h-6 w-6 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center text-[8px] font-black text-slate-500">
-                           {lead.staff.charAt(0)}
-                         </div>
-                      </div>
-                      <p className="text-sm font-black text-white mb-4 group-hover:text-emerald-400 transition-colors">{lead.name}</p>
-                      <div className="flex items-center justify-between border-t border-white/[0.05] pt-3">
-                         <div className="flex items-center gap-3">
-                            <span className="text-[9px] font-bold text-slate-600 flex items-center gap-1"><Clock className="h-3 w-3" /> {lead.time}</span>
-                         </div>
-                         <div className="flex gap-1">
-                            <button className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500 hover:bg-emerald-600 hover:text-white transition-all"><Phone className="h-3 w-3" /></button>
-                            <button className="h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center text-slate-500 hover:bg-white/10 hover:text-white transition-all"><MoreHorizontal className="h-3 w-3" /></button>
-                         </div>
-                      </div>
-                   </motion.div>
-                 ))}
-                 
-                 <button className="w-full py-3 rounded-xl border border-dashed border-white/10 text-[10px] font-black text-slate-700 uppercase tracking-widest hover:border-emerald-500/30 hover:text-emerald-500 transition-all">
-                    + Thêm mới
-                 </button>
-              </div>
+             return (
+               <div 
+                 key={column.id} 
+                 className={cn(
+                   "w-[340px] shrink-0 flex flex-col h-full bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden transition-all duration-300",
+                   isDragging && "border-white/10 bg-slate-900/60 shadow-[0_0_30px_rgba(255,255,255,0.02)]"
+                 )}
+                 onDragOver={handleDragOver}
+                 onDrop={(e) => handleDrop(column.id, e)}
+               >
+                  <div className="p-5 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.03] to-transparent">
+                     <div className="flex items-center gap-3">
+                        <div className={cn("h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)]", column.color)} />
+                        <h3 className="text-xs font-black text-white uppercase tracking-widest">{column.title}</h3>
+                        <span className="text-[10px] font-black text-slate-400 bg-slate-950/50 border border-white/5 px-2.5 py-1 rounded-lg">{columnLeads.length}</span>
+                     </div>
+                     <button className="h-8 w-8 rounded-full flex items-center justify-center text-slate-500 hover:bg-white/5 hover:text-white transition-all"><MoreHorizontal className="h-4 w-4" /></button>
+                  </div>
 
-              {/* COLUMN FOOTER SUMMARY */}
-              <div className="p-4 bg-white/[0.01] border-t border-white/[0.05] flex items-center justify-between">
-                 <p className="text-[9px] font-bold text-slate-700 uppercase tracking-widest">Tổng giá trị bước:</p>
-                 <p className="text-[10px] font-black text-slate-400">
-                    {column.leads.reduce((acc, lead) => acc + parseInt(lead.value.replace(/\./g, '').replace('đ', '')), 0).toLocaleString('vi-VN')}đ
-                 </p>
-              </div>
-           </div>
-         ))}
-      </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar min-h-[200px]">
+                     <AnimatePresence>
+                       {columnLeads.map((lead) => (
+                         <motion.div 
+                           layoutId={lead.id}
+                           initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                           animate={{ opacity: 1, y: 0, scale: 1 }}
+                           exit={{ opacity: 0, scale: 0.9 }}
+                           key={lead.id} 
+                           draggable
+                           onDragStart={() => handleDragStart(lead)}
+                           onDragEnd={() => setIsDragging(false)}
+                           className={cn(
+                             "bg-slate-950/80 border border-white/5 p-5 rounded-[1.25rem] transition-all group cursor-grab active:cursor-grabbing shadow-sm hover:shadow-xl hover:shadow-black/20 hover:border-white/10 relative overflow-hidden",
+                             draggedItem?.id === lead.id && "opacity-50 scale-95 border-emerald-500/50"
+                           )}
+                         >
+                            <div className="absolute top-0 left-0 w-1 h-full opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-emerald-500 to-teal-500" />
+                            
+                            <div className="flex items-center justify-between mb-4">
+                               <span className="text-[11px] font-black text-emerald-400 tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md">
+                                 {lead.finalPrice ? lead.finalPrice.toLocaleString('vi-VN') + 'đ' : 'CHƯA BÁO GIÁ'}
+                               </span>
+                               <div className="h-8 w-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-[10px] font-black text-emerald-500 uppercase shadow-inner">
+                                 {lead.fullName?.split(' ').pop()?.charAt(0) || 'K'}
+                               </div>
+                            </div>
+                            <p className="text-[15px] font-black text-white mb-2 group-hover:text-emerald-400 transition-colors leading-tight">{lead.fullName}</p>
+                            
+                            <div className="flex flex-wrap gap-2 mb-5">
+                              <span className="text-[9px] font-black text-slate-400 bg-slate-900 border border-white/5 px-2 py-1 rounded-md uppercase tracking-widest max-w-full truncate" title={lead.courseName || 'Chưa chọn khóa'}>
+                                {lead.courseName || 'CHƯA RÕ NHU CẦU'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                               <div className="flex items-center gap-2 text-slate-500">
+                                  <Clock className="h-3.5 w-3.5" /> 
+                                  <span className="text-[10px] font-bold tracking-wider">{new Date(lead.createdAt).toLocaleDateString('vi-VN')}</span>
+                               </div>
+                               <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                                  <a href={`tel:${lead.phone}`} title={`Gọi ${lead.phone}`} className="h-8 w-8 rounded-full bg-slate-900 border border-white/5 flex items-center justify-center text-slate-400 hover:bg-emerald-600 hover:border-emerald-500 hover:text-white hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all">
+                                    <Phone className="h-3.5 w-3.5" />
+                                  </a>
+                                  <Link href={`/admin/crm/leads/${lead.id}`} title="Chi tiết" className="h-8 w-8 rounded-full bg-slate-900 border border-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:border-white/20 hover:text-white transition-all">
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
+                                  </Link>
+                               </div>
+                            </div>
+                         </motion.div>
+                       ))}
+                     </AnimatePresence>
+                  </div>
+
+                  {/* COLUMN FOOTER SUMMARY */}
+                  <div className="p-5 bg-gradient-to-t from-white/[0.03] to-transparent border-t border-white/5 flex items-center justify-between mt-auto shrink-0">
+                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tổng giá trị</p>
+                     <p className="text-xs font-black text-emerald-500 tracking-wider">
+                        {columnValue.toLocaleString('vi-VN')}đ
+                     </p>
+                  </div>
+               </div>
+             );
+           })}
+        </div>
+      )}
     </div>
   );
 }

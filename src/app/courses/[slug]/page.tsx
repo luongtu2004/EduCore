@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { PublicHeader } from '@/components/layout/public-header';
 import { PublicFooter } from '@/components/layout/public-footer';
 import { ConsultationModal } from '@/components/modals/consultation-modal';
+import { CheckoutModal } from '@/components/modals/checkout-modal';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
@@ -22,6 +23,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [faqs, setFaqs] = useState<any[]>([]);
 
@@ -312,11 +314,18 @@ export default function CourseDetailPage() {
                       </div>
 
                       <Button 
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => setIsCheckoutOpen(true)}
                         className="w-full h-16 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 text-lg font-black shadow-xl shadow-emerald-200 gap-3 hover:scale-105 active:scale-95 transition-all border-none"
                       >
-                        ĐĂNG KÝ TƯ VẤN <ArrowRight className="h-5 w-5" />
+                        ĐĂNG KÝ NGAY <ArrowRight className="h-5 w-5" />
                       </Button>
+                      
+                      <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="w-full text-center text-xs font-black text-slate-400 uppercase tracking-widest hover:text-emerald-500 transition-colors"
+                      >
+                        HOẶC NHẬN TƯ VẤN MIỄN PHÍ
+                      </button>
                       
                       <p className="text-center text-xs font-medium text-slate-400 italic">
                         * Hoàn tiền 100% nếu không đạt kết quả cam kết
@@ -342,6 +351,17 @@ export default function CourseDetailPage() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         courseName={course.title}
+      />
+
+      {/* CHECKOUT MODAL WITH COUPON */}
+      <CheckoutModal 
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        course={{
+            id: course.id,
+            title: course.title,
+            price: course.price
+        }}
       />
 
       {/* VIDEO PREVIEW MODAL */}

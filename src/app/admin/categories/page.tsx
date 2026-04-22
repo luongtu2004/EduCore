@@ -23,6 +23,8 @@ export default function CategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchCategories();
@@ -74,6 +76,16 @@ export default function CategoriesPage() {
     c.slug.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const paginatedCategories = filteredCategories.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10">
       {/* BREADCRUMBS */}
@@ -117,8 +129,8 @@ export default function CategoriesPage() {
           Array(6).fill(0).map((_, i) => (
             <div key={i} className="h-48 rounded-[2rem] bg-white border border-slate-100 animate-pulse" />
           ))
-        ) : filteredCategories.length > 0 ? (
-          filteredCategories.map((cat, idx) => (
+        ) : paginatedCategories.length > 0 ? (
+          paginatedCategories.map((cat, idx) => (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -180,6 +192,35 @@ export default function CategoriesPage() {
           </div>
         )}
       </div>
+
+      {/* PAGINATION BAR */}
+      {totalPages > 1 && (
+        <div className="mt-10 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-8 py-6 bg-[#f1f5f9]/50 flex items-center justify-between">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Hiển thị {paginatedCategories.length} / {filteredCategories.length} danh mục
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" size="icon" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className="h-9 w-9 rounded-full border-slate-200 bg-white text-slate-400 hover:text-emerald-600 disabled:opacity-20 transition-all"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" size="icon"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                className="h-9 w-9 rounded-full border-slate-200 bg-white text-slate-400 hover:text-emerald-600 disabled:opacity-20 transition-all"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CategoryModal
         isOpen={isModalOpen}

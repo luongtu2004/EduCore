@@ -1,7 +1,7 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { LeadsController } from './leads.controller';
 import { LeadsService } from './leads.service';
-import { createLeadSchema, updateLeadStatusSchema } from './leads.schema';
+import { createLeadSchema, updateLeadStatusSchema, assignLeadSchema } from './leads.schema';
 
 export const leadRoutes: FastifyPluginAsyncZod = async (server) => {
   const leadsService = new LeadsService(server as any);
@@ -32,5 +32,20 @@ export const leadRoutes: FastifyPluginAsyncZod = async (server) => {
       await server.authenticate(req, res);
     },
     handler: leadsController.getById.bind(leadsController),
+  });
+
+  server.patch('/:id/assign', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    schema: { body: assignLeadSchema },
+    handler: leadsController.assignLead.bind(leadsController),
+  });
+
+  server.delete('/:id', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    handler: leadsController.delete.bind(leadsController),
   });
 };

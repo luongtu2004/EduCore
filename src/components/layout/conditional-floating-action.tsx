@@ -7,7 +7,10 @@ export function ConditionalFloatingAction() {
   const pathname = usePathname();
   
   // Không hiển thị trên các trang Admin hoặc trang Login/Register
-  const isExcluded = pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/register');
+  const isExcluded = pathname.startsWith('/admin') || 
+                     pathname.startsWith('/login') || 
+                     pathname.startsWith('/register') ||
+                     pathname.startsWith('/profile');
   
   if (isExcluded) return null;
   

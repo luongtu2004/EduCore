@@ -9,6 +9,10 @@ export const createLeadSchema = z.object({
   phone: z.string().min(10, 'Số điện thoại không hợp lệ'),
   source: z.enum(LeadSourceList).optional(),
   note: z.string().optional(),
+  courseName: z.string().optional(),
+  paymentMethod: z.string().optional(),
+  couponCode: z.string().optional(),
+  finalPrice: z.number().optional(),
 });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
@@ -19,3 +23,10 @@ export const updateLeadStatusSchema = z.object({
 });
 
 export type UpdateLeadStatusInput = z.infer<typeof updateLeadStatusSchema>;
+
+export const assignLeadSchema = z.object({
+  assignedTo: z.string().min(1, 'ID nhân sự không hợp lệ'),
+  assignedStaffName: z.string().optional(),
+});
+
+export type AssignLeadInput = z.infer<typeof assignLeadSchema>;

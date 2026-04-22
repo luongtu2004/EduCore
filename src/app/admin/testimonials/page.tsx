@@ -138,7 +138,7 @@ export default function TestimonialsPage() {
                     <img src={item.image || 'https://ui-avatars.com/api/?name=' + item.name} className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase italic leading-none">{item.name}</h3>
+                    <h3 className="text-xl font-black text-slate-900 uppercase leading-none">{item.name}</h3>
                     <div className="flex items-center gap-2 mt-2">
                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-widest">{item.score}</span>
                        <div className="flex text-yellow-400">
@@ -186,7 +186,7 @@ export default function TestimonialsPage() {
 
               <div className="relative">
                 <Quote className="absolute -top-2 -left-2 h-8 w-8 text-slate-50 -z-0" />
-                <p className="text-sm font-bold text-slate-500 leading-relaxed italic relative z-10 line-clamp-3">
+                <p className="text-sm font-bold text-slate-500 leading-relaxed relative z-10 line-clamp-3">
                   "{item.text}"
                 </p>
               </div>

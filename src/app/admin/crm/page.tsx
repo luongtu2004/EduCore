@@ -2,7 +2,7 @@
 
 import {
    TrendingUp, Users, ClipboardList, Calendar,
-   Search, Bell, Sparkles, DollarSign, ArrowUpRight,
+   Sparkles, DollarSign, ArrowUpRight,
    Target, Zap, Activity, UserPlus, Phone, MessageSquare,
    Eye, CheckSquare, Clock, MoreVertical, User,
    Loader2, Home, ChevronRight
@@ -72,24 +72,7 @@ export default function CRMDashboard() {
                      <p className="text-[11px] font-bold text-slate-500 tracking-tight">Chào buổi sáng, Admin. Hệ thống CRM đã sẵn sàng.</p>
                   </div>
                </div>
-            </div>
-            <div className="flex items-center gap-3">
-               <div className="relative group hidden xl:block">
-                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-600" />
-                  <input
-                     type="text"
-                     placeholder="Tìm khách hàng..."
-                     className="w-64 bg-slate-950 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-emerald-500/30 transition-all text-white outline-none"
-                  />
-               </div>
-               <button className="p-2.5 bg-slate-950 border border-white/5 rounded-xl text-slate-500 hover:text-emerald-500 transition-all relative">
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 bg-red-500 rounded-full border border-slate-950"></span>
-               </button>
-               <Button className="h-10 rounded-xl bg-emerald-600 text-white px-6 font-black text-[10px] tracking-widest uppercase hover:bg-emerald-700 border-none shadow-lg shadow-emerald-900/20">
-                  Thêm Lead
-               </Button>
-            </div>
+         </div>
          </div>
 
          {/* STATS */}

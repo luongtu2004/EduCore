@@ -51,14 +51,19 @@ export async function publicQuizRoutes(app: ExtendedApp) {
       await mongoClient.connect();
       const db = mongoClient.db();
       
-      // CRM: Create Lead (Native)
+      // CRM: Create Lead with embedded quiz result (Native)
       const leadResult = await db.collection('crm_leads').insertOne({
         fullName: body.fullName,
         phone: body.phone,
         email: body.email || null,
         source: 'AI_TEST',
         status: 'NEW',
-        note: `Kết quả Test AI (Hệ thống): ${level} - Điểm: ${totalScore}`,
+        courseName: course,
+        quizResult: {
+          score: totalScore,
+          level: level,
+        },
+        note: `Kết quả Test AI: ${level} - Điểm: ${totalScore}`,
         createdAt: new Date(),
         updatedAt: new Date()
       });
