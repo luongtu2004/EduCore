@@ -1,6 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { MongoClient } from 'mongodb';
 
+// Shared MongoDB client (basic connection pooling)
+let sharedMongoClient: MongoClient | null = null;
+async function getDb() {
+  if (!sharedMongoClient) {
+    sharedMongoClient = new MongoClient(process.env.DATABASE_URL || '');
+  }
+  await sharedMongoClient.connect();
+  return sharedMongoClient.db();
+}
+
 export async function adminStatsRoutes(app: FastifyInstance) {
   const mongoClient = new MongoClient(process.env.DATABASE_URL || '');
 
@@ -97,4 +107,148 @@ export async function adminStatsRoutes(app: FastifyInstance) {
       return reply.status(500).send({ success: false, message: error.message });
     }
   });
+
+  // GET /api/v1/admin/crm-stats — CRM Real-time Stats
+  app.get('/crm-stats', async (request, reply) => {
+    try {
+      const db = await getDb();
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+      const [
+        totalLeads,
+        newLeadsThisMonth,
+        newLeadsLastMonth,
+        totalStudents,
+        newStudentsThisMonth,
+        wonLeads,
+        paidOrders,
+        totalRevenueAgg,
+        revenueLastMonthAgg,
+      ] = await Promise.all([
+        db.collection('crm_leads').countDocuments(),
+        db.collection('crm_leads').countDocuments({ createdAt: { $gte: startOfMonth } }),
+        db.collection('crm_leads').countDocuments({ createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } }),
+        db.collection('crm_students').countDocuments(),
+        db.collection('crm_students').countDocuments({ createdAt: { $gte: startOfMonth } }),
+        db.collection('crm_leads').countDocuments({ status: 'WON' }),
+        db.collection('crm_orders').countDocuments({ status: 'PAID' }),
+        db.collection('crm_orders').aggregate([
+          { $match: { status: 'PAID' } },
+          { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]).toArray(),
+        db.collection('crm_orders').aggregate([
+          { $match: { status: 'PAID', createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } } },
+          { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]).toArray(),
+      ]);
+
+      const totalRevenue = totalRevenueAgg[0]?.total || 0;
+      const revenueLastMonth = revenueLastMonthAgg[0]?.total || 0;
+
+      // Revenue this month
+      const revenueThisMonthAgg = await db.collection('crm_orders').aggregate([
+        { $match: { status: 'PAID', createdAt: { $gte: startOfMonth } } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]).toArray();
+      const revenueThisMonth = revenueThisMonthAgg[0]?.total || 0;
+
+      // Conversion rate (WON / total leads)
+      const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
+
+      // Monthly revenue chart - last 6 months
+      const monthlyChart = [];
+      for (let i = 5; i >= 0; i--) {
+        const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+        const [rev, leadsCount] = await Promise.all([
+          db.collection('crm_orders').aggregate([
+            { $match: { status: 'PAID', createdAt: { $gte: mStart, $lte: mEnd } } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+          ]).toArray(),
+          db.collection('crm_leads').countDocuments({ createdAt: { $gte: mStart, $lte: mEnd } }),
+        ]);
+        monthlyChart.push({
+          month: mStart.toLocaleDateString('vi-VN', { month: 'short', year: '2-digit' }),
+          revenue: rev[0]?.total || 0,
+          leads: leadsCount,
+        });
+      }
+
+      // Status breakdown
+      const statusBreakdown = await db.collection('crm_leads').aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]).toArray();
+
+      // Recent leads
+      const recentLeads = await db.collection('crm_leads').find({}).sort({ createdAt: -1 }).limit(5).toArray();
+
+      return reply.send({
+        success: true,
+        data: {
+          totalLeads,
+          newLeadsThisMonth,
+          leadsGrowth: newLeadsLastMonth > 0 ? Math.round(((newLeadsThisMonth - newLeadsLastMonth) / newLeadsLastMonth) * 100) : 0,
+          totalStudents,
+          newStudentsThisMonth,
+          totalRevenue,
+          revenueThisMonth,
+          revenueGrowth: revenueLastMonth > 0 ? Math.round(((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100) : 0,
+          conversionRate,
+          paidOrders,
+          monthlyChart,
+          statusBreakdown: statusBreakdown.map((s: any) => ({ status: s._id || 'NEW', count: s.count })),
+          recentLeads: recentLeads.map((l: any) => ({
+            id: l._id.toString(),
+            fullName: l.fullName,
+            phone: l.phone,
+            email: l.email,
+            status: l.status,
+            source: l.source,
+            courseName: l.courseName,
+            createdAt: l.createdAt,
+          })),
+        }
+      });
+    } catch (error: any) {
+      console.error('CRM stats error:', error);
+      return reply.status(500).send({ success: false, message: error.message });
+    }
+  });
+
+  // GET /api/v1/admin/crm-staff-stats — Staff KPI
+  app.get('/crm-staff-stats', { preHandler: [app.authenticate] }, async (request, reply) => {
+    try {
+      const db = await getDb();
+      const staffLeads = await db.collection('crm_leads').aggregate([
+        { $match: { assignedTo: { $exists: true, $ne: null } } },
+        { $group: {
+          _id: '$assignedTo',
+          staffName: { $first: '$assignedStaffName' },
+          totalLeads: { $sum: 1 },
+          wonLeads: { $sum: { $cond: [{ $eq: ['$status', 'WON'] }, 1, 0] } },
+          totalRevenue: { $sum: { $ifNull: ['$finalPrice', 0] } },
+        }},
+        { $sort: { wonLeads: -1 } }
+      ]).toArray();
+
+      return reply.send({
+        success: true,
+        data: staffLeads.map((s: any) => ({
+          staffId: s._id,
+          staffName: s.staffName || 'Chưa rõ',
+          totalLeads: s.totalLeads,
+          wonLeads: s.wonLeads,
+          conversionRate: s.totalLeads > 0 ? Math.round((s.wonLeads / s.totalLeads) * 100) : 0,
+          totalRevenue: s.totalRevenue,
+        }))
+      });
+    } catch (error: any) {
+      return reply.status(500).send({ success: false, message: error.message });
+    }
+  });
 }
+

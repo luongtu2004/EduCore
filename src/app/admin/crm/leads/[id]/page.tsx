@@ -8,7 +8,7 @@ import {
   Award, Brain, CreditCard, Tag, DollarSign,
   User, Globe, ChevronRight, Home, Edit2,
   AlertCircle, Sparkles, Check, X, RefreshCw,
-  ClipboardList
+  ClipboardList, PenLine, Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/axios';
@@ -18,12 +18,12 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  NEW:          { label: 'Mới đăng ký',    color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-  CONTACTED:    { label: 'Đã liên hệ',     color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20' },
-  CONSULTING:   { label: 'Đang tư vấn',    color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20' },
-  TRIAL_LEARNING:{ label: 'Học thử',       color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20' },
-  WON:          { label: 'Đã đăng ký HV',  color: 'text-teal-400',    bg: 'bg-teal-500/10',    border: 'border-teal-500/20' },
-  LOST:         { label: 'Không tiếp cận', color: 'text-slate-500',   bg: 'bg-slate-500/10',   border: 'border-slate-500/20' },
+  NEW: { label: 'Mới đăng ký', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  CONTACTED: { label: 'Đã liên hệ', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+  CONSULTING: { label: 'Đang tư vấn', color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+  TRIAL_LEARNING: { label: 'Học thử', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+  WON: { label: 'Đã đăng ký HV', color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/20' },
+  LOST: { label: 'Không tiếp cận', color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
 };
 
 const STATUS_FLOW = ['NEW', 'CONTACTED', 'CONSULTING', 'TRIAL_LEARNING', 'WON'];
@@ -36,6 +36,11 @@ export default function LeadDetailPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
+  const [newNote, setNewNote] = useState('');
+  const [submittingNote, setSubmittingNote] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState({ fullName: '', email: '', phone: '', courseName: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
   const [staffList, setStaffList] = useState<any[]>([]);
 
   const fetchStaffList = async () => {
@@ -44,7 +49,7 @@ export default function LeadDetailPage() {
       if (res.success) {
         setStaffList(res.data.filter((u: any) => ['STAFF', 'CONSULTANT', 'ADMIN'].includes(u.role)));
       }
-    } catch(e) {}
+    } catch (e) { }
   };
 
   const fetchLead = async () => {
@@ -58,10 +63,38 @@ export default function LeadDetailPage() {
     }
   };
 
-  useEffect(() => { 
-    fetchLead(); 
+  useEffect(() => {
+    fetchLead();
     fetchStaffList();
   }, [id]);
+
+  const submitNote = async () => {
+    if (!newNote.trim()) return;
+    setSubmittingNote(true);
+    try {
+      await api.post(`/crm/leads/${id}/note`, { note: newNote });
+      toast.success('Đã thêm ghi chú');
+      setNewNote('');
+      fetchLead();
+    } catch { toast.error('Lỗi khi thêm ghi chú'); }
+    finally { setSubmittingNote(false); }
+  };
+
+  const openEdit = () => {
+    setEditForm({ fullName: lead.fullName || '', email: lead.email || '', phone: lead.phone || '', courseName: lead.courseName || '' });
+    setEditMode(true);
+  };
+
+  const saveEdit = async () => {
+    setSavingEdit(true);
+    try {
+      await api.patch(`/crm/leads/${id}`, editForm);
+      toast.success('Đã cập nhật thông tin');
+      setEditMode(false);
+      fetchLead();
+    } catch { toast.error('Lỗi khi cập nhật'); }
+    finally { setSavingEdit(false); }
+  };
 
   const updateStatus = async (status: string) => {
     setUpdatingStatus(true);
@@ -80,9 +113,9 @@ export default function LeadDetailPage() {
   const handleAssign = async (staffId: string) => {
     const staff = staffList.find(s => s.id === staffId);
     try {
-      await api.patch(`/crm/leads/${id}/assign`, { 
-        assignedTo: staffId, 
-        assignedStaffName: staff?.fullName 
+      await api.patch(`/crm/leads/${id}/assign`, {
+        assignedTo: staffId,
+        assignedStaffName: staff?.fullName
       });
       toast.success(`Đã giao cho ${staff?.fullName}`);
       fetchLead();
@@ -134,7 +167,6 @@ export default function LeadDetailPage() {
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest">Danh sách khách hàng</span>
           </button>
-
           <div className="flex items-center gap-3">
             {currentStatusIdx < STATUS_FLOW.length - 1 && (
               <Button
@@ -168,9 +200,9 @@ export default function LeadDetailPage() {
                 <div className={cn(
                   "h-24 w-24 rounded-3xl flex items-center justify-center text-3xl font-black mb-4 shadow-2xl",
                   lead.paymentMethod === 'TRANSFER' ? "bg-gradient-to-tr from-emerald-600 to-teal-400 text-white" :
-                  lead.paymentMethod === 'CONSULT'  ? "bg-gradient-to-tr from-amber-600 to-yellow-400 text-white" :
-                  lead.source === 'AI_TEST'          ? "bg-gradient-to-tr from-purple-600 to-violet-400 text-white" :
-                  "bg-gradient-to-tr from-slate-700 to-slate-600 text-slate-300"
+                    lead.paymentMethod === 'CONSULT' ? "bg-gradient-to-tr from-amber-600 to-yellow-400 text-white" :
+                      lead.source === 'AI_TEST' ? "bg-gradient-to-tr from-purple-600 to-violet-400 text-white" :
+                        "bg-gradient-to-tr from-slate-700 to-slate-600 text-slate-300"
                 )}>
                   {lead.fullName?.charAt(0)?.toUpperCase()}
                 </div>
@@ -181,14 +213,21 @@ export default function LeadDetailPage() {
                 )}>
                   {statusCfg.label}
                 </span>
+                <button
+                  onClick={openEdit}
+                  className="mt-4 flex items-center gap-1.5 text-[10px] font-black text-slate-600 hover:text-emerald-400 uppercase tracking-widest transition-colors group"
+                >
+                  <Edit2 className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                  Sửa thông tin
+                </button>
               </div>
 
               <div className="space-y-3">
                 {[
-                  { icon: Phone,    label: 'Điện thoại', value: lead.phone },
-                  { icon: Mail,     label: 'Email',      value: lead.email || 'Chưa cập nhật' },
-                  { icon: Calendar, label: 'Ngày đăng ký', value: new Date(lead.createdAt).toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) },
-                  { icon: Globe,    label: 'Nguồn',      value: lead.source === 'AI_TEST' ? '🤖 Test AI' : lead.source === 'WEBSITE' ? '🌐 Website' : lead.source },
+                  { icon: Phone, label: 'Điện thoại', value: lead.phone },
+                  { icon: Mail, label: 'Email', value: lead.email || 'Chưa cập nhật' },
+                  { icon: Calendar, label: 'Ngày đăng ký', value: new Date(lead.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
+                  { icon: Globe, label: 'Nguồn', value: lead.source === 'AI_TEST' ? '🤖 Test AI' : lead.source === 'WEBSITE' ? '🌐 Website' : lead.source },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
                     <Icon className="h-4 w-4 text-slate-600 group-hover:text-emerald-500 shrink-0 transition-colors" />
@@ -198,7 +237,7 @@ export default function LeadDetailPage() {
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Phân công nhân viên */}
                 <div className="mt-6 pt-6 border-t border-white/5">
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Người phụ trách (Sale)</p>
@@ -297,9 +336,9 @@ export default function LeadDetailPage() {
                       >
                         <div className={cn(
                           "h-8 w-8 rounded-full border-2 flex items-center justify-center transition-all text-xs font-black",
-                          active  ? `${cfg.bg} ${cfg.border} ${cfg.color} scale-110` :
-                          done    ? "bg-emerald-500 border-emerald-500 text-white" :
-                          "bg-white/5 border-white/10 text-slate-700 group-hover:border-white/30"
+                          active ? `${cfg.bg} ${cfg.border} ${cfg.color} scale-110` :
+                            done ? "bg-emerald-500 border-emerald-500 text-white" :
+                              "bg-white/5 border-white/10 text-slate-700 group-hover:border-white/30"
                         )}>
                           {done && !active ? <Check className="h-4 w-4" /> : <span>{i + 1}</span>}
                         </div>
@@ -379,6 +418,30 @@ export default function LeadDetailPage() {
               </motion.div>
             )}
 
+            {/* Add Note */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              className="bg-white/[0.03] border border-white/5 rounded-[2rem] p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <PenLine className="h-4 w-4 text-emerald-500" />
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Thêm ghi chú</h3>
+              </div>
+              <textarea
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                placeholder="Nhập ghi chú nội bộ... (VD: Đã gọi điện, khách đồng ý tham gia tư vấn thứ 3)"
+                rows={3}
+                className="w-full bg-slate-950/50 border border-white/5 rounded-xl p-4 text-sm text-slate-300 placeholder:text-slate-700 outline-none resize-none font-medium leading-relaxed focus:border-emerald-500/50 transition-all"
+              />
+              <Button
+                onClick={submitNote}
+                disabled={!newNote.trim() || submittingNote}
+                className="mt-3 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 font-black text-xs border-none gap-2 disabled:opacity-40"
+              >
+                {submittingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Lưu ghi chú
+              </Button>
+            </motion.div>
+
             {/* Activity Log */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <div className="flex items-center justify-between mb-4 px-2">
@@ -392,13 +455,17 @@ export default function LeadDetailPage() {
                   <div key={idx} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 flex items-start gap-4">
                     <div className={cn(
                       "h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
-                      log.type === 'CREATED'       ? "bg-emerald-500/10 text-emerald-500" :
-                      log.type === 'STATUS_CHANGE' ? "bg-blue-500/10 text-blue-400" :
-                      "bg-white/5 text-slate-500"
+                      log.type === 'CREATED' ? "bg-emerald-500/10 text-emerald-500" :
+                        log.type === 'STATUS_CHANGE' ? "bg-blue-500/10 text-blue-400" :
+                          log.type === 'NOTE' ? "bg-purple-500/10 text-purple-400" :
+                            log.type === 'UPDATED' ? "bg-amber-500/10 text-amber-400" :
+                              "bg-white/5 text-slate-500"
                     )}>
                       {log.type === 'CREATED' ? <User className="h-4 w-4" /> :
-                       log.type === 'STATUS_CHANGE' ? <ClipboardList className="h-4 w-4" /> :
-                       <Clock className="h-4 w-4" />}
+                        log.type === 'STATUS_CHANGE' ? <ClipboardList className="h-4 w-4" /> :
+                          log.type === 'NOTE' ? <PenLine className="h-4 w-4" /> :
+                            log.type === 'UPDATED' ? <Edit2 className="h-4 w-4" /> :
+                              <Clock className="h-4 w-4" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-slate-200 leading-snug">{log.content}</p>
@@ -419,6 +486,56 @@ export default function LeadDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* EDIT MODAL */}
+      <AnimatePresence>
+        {editMode && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setEditMode(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-lg shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-black text-white uppercase tracking-tight">Sửa thông tin khách hàng</h2>
+                <button onClick={() => setEditMode(false)} className="text-slate-500 hover:text-white"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { label: 'Họ và tên', key: 'fullName', type: 'text' },
+                  { label: 'Số điện thoại', key: 'phone', type: 'tel' },
+                  { label: 'Email', key: 'email', type: 'email' },
+                  { label: 'Khóa học quan tâm', key: 'courseName', type: 'text' },
+                ].map(({ label, key, type }) => (
+                  <div key={key}>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block">{label}</label>
+                    <input
+                      type={type}
+                      value={(editForm as any)[key]}
+                      onChange={e => setEditForm(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="w-full h-12 px-4 rounded-xl bg-slate-950/50 border border-white/10 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button onClick={() => setEditMode(false)} variant="outline" className="flex-1 h-11 rounded-xl border-white/10 text-slate-400 font-black text-xs">Hủy</Button>
+                <Button onClick={saveEdit} disabled={savingEdit} className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border-none font-black text-xs gap-2">
+                  {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Lưu thay đổi
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -45,4 +45,19 @@ export class LeadsController {
     }
     return { success: true };
   }
+
+  async addNote(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const { note } = request.body as { note: string };
+    const user = request.user as any;
+    const result = await this.leadsService.addNote(id, note, user?.id);
+    return { success: true, data: result };
+  }
+
+  async updateLead(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = request.params as { id: string };
+    const body = request.body as any;
+    const result = await this.leadsService.updateLead(id, body);
+    return { success: true, data: result };
+  }
 }

@@ -4,6 +4,30 @@ import { MongoClient, ObjectId } from 'mongodb';
 export async function studentRoutes(app: FastifyInstance) {
   const mongoClient = new MongoClient(process.env.DATABASE_URL || '');
 
+  // POST — Create student manually
+  app.post('', {
+    preHandler: [app.authenticate]
+  }, async (request, reply) => {
+    const body = request.body as any;
+    try {
+      await mongoClient.connect();
+      const db = mongoClient.db();
+      const newStudent = {
+        fullName: body.fullName,
+        email: body.email || '',
+        phone: body.phone || '',
+        courseName: body.courseName || '',
+        status: body.status || 'ACTIVE',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const result = await db.collection('crm_students').insertOne(newStudent);
+      return { success: true, data: { ...newStudent, id: result.insertedId.toString() } };
+    } catch {
+      return { success: false, message: 'Lỗi tạo học viên' };
+    }
+  });
+
   // GET All Students with Enrollment info
   app.get('', async (request, reply) => {
     try {

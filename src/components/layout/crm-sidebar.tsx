@@ -23,6 +23,13 @@ const crmGroups = [
       { name: 'Pipeline (Phễu)', icon: GitBranch, href: '/admin/crm/pipeline' },
       { name: 'Đơn hàng (Orders)', icon: CreditCard, href: '/admin/crm/orders' },
       { name: 'Học viên (Students)', icon: GraduationCap, href: '/admin/crm/students' },
+      { name: 'Tin nhắn tư vấn', icon: HeartHandshake, href: '/admin/crm/contacts' },
+    ]
+  },
+  {
+    group: 'PHÂN TÍCH',
+    items: [
+      { name: 'Báo cáo & Thống kê', icon: CheckSquare, href: '/admin/crm/reports' },
     ]
   },
   {

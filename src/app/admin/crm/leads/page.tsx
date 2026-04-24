@@ -26,8 +26,15 @@ export default function CRMLeadsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
+  const [sortField, setSortField] = useState<'createdAt' | 'fullName'>('createdAt');
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
   const itemsPerPage = 10;
   const { socket } = useSocket();
+
+  const toggleSort = (field: 'createdAt' | 'fullName') => {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('asc'); }
+  };
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -99,8 +106,18 @@ export default function CRMLeadsPage() {
         (lead.source?.toUpperCase() === activeSource.toUpperCase());
 
       return matchesSearch && matchesTab && matchesSource;
+    }).sort((a, b) => {
+      if (sortField === 'fullName') {
+        return sortDir === 'asc'
+          ? (a.fullName || '').localeCompare(b.fullName || '')
+          : (b.fullName || '').localeCompare(a.fullName || '');
+      }
+      // createdAt
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return sortDir === 'asc' ? da - db : db - da;
     });
-  }, [leads, searchQuery, activeTab, activeSource]);
+  }, [leads, searchQuery, activeTab, activeSource, sortField, sortDir]);
 
   const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
   const paginatedLeads = filteredLeads.slice(
@@ -260,11 +277,21 @@ export default function CRMLeadsPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/5 bg-white/5">
-              <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Khách hàng & Khóa học</th>
+              <th
+                className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] cursor-pointer hover:text-emerald-400 transition-colors select-none"
+                onClick={() => toggleSort('fullName')}
+              >
+                Khách hàng & Khóa học {sortField === 'fullName' ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+              </th>
               <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Kết quả AI</th>
               <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Liên hệ</th>
               <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Trạng thái</th>
-              <th className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Ngày tạo</th>
+              <th
+                className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] cursor-pointer hover:text-emerald-400 transition-colors select-none"
+                onClick={() => toggleSort('createdAt')}
+              >
+                Ngày tạo {sortField === 'createdAt' ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+              </th>
               <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] text-right">Hành động</th>
             </tr>
           </thead>

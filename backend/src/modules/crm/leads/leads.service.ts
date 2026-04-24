@@ -180,4 +180,47 @@ export class LeadsService {
     
     return result.deletedCount > 0;
   }
+
+  async addNote(leadId: string, note: string, authorId?: string) {
+    await this.mongoClient.connect();
+    const db = this.mongoClient.db();
+    
+    await db.collection('crm_activity_logs').insertOne({
+      leadId,
+      type: 'NOTE',
+      content: note,
+      createdBy: authorId,
+      createdAt: new Date()
+    });
+
+    return { success: true };
+  }
+
+  async updateLead(id: string, data: { fullName?: string; email?: string; phone?: string; note?: string; source?: string; courseName?: string }) {
+    await this.mongoClient.connect();
+    const db = this.mongoClient.db();
+    
+    const updateData: any = { updatedAt: new Date() };
+    if (data.fullName !== undefined) updateData.fullName = data.fullName;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.note !== undefined) updateData.note = data.note;
+    if (data.source !== undefined) updateData.source = data.source;
+    if (data.courseName !== undefined) updateData.courseName = data.courseName;
+
+    await db.collection('crm_leads').updateOne(
+      { _id: new ObjectId(id) as any },
+      { $set: updateData }
+    );
+
+    await db.collection('crm_activity_logs').insertOne({
+      leadId: id,
+      type: 'UPDATED',
+      content: 'Thông tin khách hàng đã được cập nhật',
+      createdAt: new Date()
+    });
+
+    const updated = await db.collection('crm_leads').findOne({ _id: new ObjectId(id) as any });
+    return { ...updated, id: updated?._id.toString() };
+  }
 }

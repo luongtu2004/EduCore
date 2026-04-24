@@ -20,9 +20,13 @@ export default function CRMStudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
   const [confirmComplete, setConfirmComplete] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
+  const [addModal, setAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ fullName: '', email: '', phone: '', courseName: '' });
+  const [savingAdd, setSavingAdd] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -72,11 +76,33 @@ export default function CRMStudentsPage() {
     }
   };
 
-  const filteredStudents = students.filter(student => 
-    student.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    student.phone?.includes(searchQuery)
-  );
+  const handleAddStudent = async () => {
+    if (!addForm.fullName || !addForm.phone) {
+      toast.error('Vui lòng nhập họ tên và số điện thoại');
+      return;
+    }
+    setSavingAdd(true);
+    try {
+      const res: any = await api.post('/crm/students', { ...addForm, status: 'ACTIVE' });
+      if (res.success) {
+        toast.success('Đã thêm học viên thành công');
+        setAddModal(false);
+        setAddForm({ fullName: '', email: '', phone: '', courseName: '' });
+        fetchStudents();
+      } else throw new Error(res.message);
+    } catch { toast.error('Lỗi khi thêm học viên'); }
+    finally { setSavingAdd(false); }
+  };
+
+  const filteredStudents = students.filter(student => {
+    const matchSearch = student.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.phone?.includes(searchQuery);
+    const matchStatus = statusFilter === 'ALL' ||
+      (statusFilter === 'ACTIVE' && student.status !== 'COMPLETED') ||
+      (statusFilter === 'COMPLETED' && student.status === 'COMPLETED');
+    return matchSearch && matchStatus;
+  });
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice(
@@ -86,10 +112,11 @@ export default function CRMStudentsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-300 font-sans antialiased selection:bg-emerald-500/30">
+    <>
+      <div className="min-h-screen bg-slate-900 text-slate-300 font-sans antialiased selection:bg-emerald-500/30">
       <div className="p-8 space-y-8">
         
         {/* BREADCRUMBS */}
@@ -108,6 +135,7 @@ export default function CRMStudentsPage() {
             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">QUẢN LÝ LỘ TRÌNH VÀ TIẾN ĐỘ HỌC TẬP</p>
           </div>
           <Button 
+            onClick={() => setAddModal(true)}
             className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-8 font-black text-[11px] transition-all gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest border-none"
           >
             <UserPlus className="h-4 w-4" /> THÊM HỌC VIÊN
@@ -127,6 +155,31 @@ export default function CRMStudentsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm text-slate-200 placeholder:text-slate-600 outline-none shadow-inner"
             />
+          </div>
+
+          {/* STATUS FILTER */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { id: 'ALL', label: 'Tất cả' },
+              { id: 'ACTIVE', label: 'Đang học' },
+              { id: 'COMPLETED', label: 'Đã hoàn thành' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setStatusFilter(tab.id)}
+                className={cn(
+                  'px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border',
+                  statusFilter === tab.id
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-900/20'
+                    : 'bg-white/5 border-white/5 text-slate-500 hover:text-white hover:bg-white/10'
+                )}
+              >
+                {tab.label}
+                <span className="ml-2 text-[10px] opacity-60">
+                  ({tab.id === 'ALL' ? students.length : students.filter(s => tab.id === 'ACTIVE' ? s.status !== 'COMPLETED' : s.status === 'COMPLETED').length})
+                </span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -287,5 +340,62 @@ export default function CRMStudentsPage() {
 
       </div>
     </div>
+
+    {/* ADD STUDENT MODAL */}
+    <AnimatePresence>
+      {addModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setAddModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.95, y: 20 }}
+            onClick={e => e.stopPropagation()}
+            className="bg-slate-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-lg shadow-2xl"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-black text-white uppercase tracking-tight">Thêm Học Viên</h2>
+              <button onClick={() => setAddModal(false)} className="text-slate-500 hover:text-white"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="space-y-4">
+              {[
+                { label: 'Họ và tên *', key: 'fullName', type: 'text', placeholder: 'Nguyễn Văn A' },
+                { label: 'Số điện thoại *', key: 'phone', type: 'tel', placeholder: '0901234567' },
+                { label: 'Email', key: 'email', type: 'email', placeholder: 'example@gmail.com' },
+                { label: 'Khóa học đang học', key: 'courseName', type: 'text', placeholder: 'IELTS Foundation' },
+              ].map(({ label, key, type, placeholder }) => (
+                <div key={key}>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block">{label}</label>
+                  <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={(addForm as any)[key]}
+                    onChange={e => setAddForm(prev => ({ ...prev, [key]: e.target.value }))}
+                    className="w-full h-12 px-4 rounded-xl bg-slate-950/50 border border-white/10 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-600"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 mt-6">
+              <Button onClick={() => setAddModal(false)} variant="outline" className="flex-1 h-11 rounded-xl border-white/10 text-slate-400 font-black text-xs">Hủy</Button>
+              <Button
+                onClick={handleAddStudent}
+                disabled={savingAdd}
+                className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border-none font-black text-xs gap-2"
+              >
+                {savingAdd ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                Thêm học viên
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

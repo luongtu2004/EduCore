@@ -48,4 +48,18 @@ export const leadRoutes: FastifyPluginAsyncZod = async (server) => {
     },
     handler: leadsController.delete.bind(leadsController),
   });
+
+  server.post('/:id/note', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    handler: leadsController.addNote.bind(leadsController),
+  });
+
+  server.patch('/:id', {
+    preHandler: async (req, res) => {
+      await server.authenticate(req, res);
+    },
+    handler: leadsController.updateLead.bind(leadsController),
+  });
 };
