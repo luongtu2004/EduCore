@@ -5,11 +5,13 @@ import { io, Socket } from 'socket.io-client';
 
 interface Notification {
   id: string;
+  leadId?: string;
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning';
   createdAt: Date;
   read: boolean;
+  paymentMethod?: string;
 }
 
 interface SocketContextType {
@@ -25,6 +27,23 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('educore_notifications');
+    if (saved) {
+      try {
+        setNotifications(JSON.parse(saved));
+      } catch (e) {}
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('educore_notifications', JSON.stringify(notifications));
+    }
+  }, [notifications, isLoaded]);
 
   useEffect(() => {
     // Kết nối tới Backend Socket (Mặc định port 5000)
@@ -35,11 +54,13 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     newSocket.on('newLead', (data) => {
       const newNotification: Notification = {
         id: Math.random().toString(36).substr(2, 9),
+        leadId: data.id,
         title: 'Lead mới đăng ký',
-        message: `${data.fullName} vừa đăng ký tư vấn ${data.course || 'khóa học'}.`,
+        message: `${data.fullName} vừa đăng ký tư vấn ${data.courseName || 'khóa học'}.`,
         type: 'success',
         createdAt: new Date(),
         read: false,
+        paymentMethod: data.paymentMethod,
       };
       setNotifications((prev) => [newNotification, ...prev]);
       

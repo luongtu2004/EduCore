@@ -95,7 +95,7 @@ export function CheckoutModal({ isOpen, onClose, course }: CheckoutModalProps) {
         source: 'WEBSITE',
         courseName: course.title,
         paymentMethod,
-        couponCode: appliedCoupon?.code || null,
+        couponCode: appliedCoupon?.code || '',
         finalPrice,
         note: `[${paymentMethod === 'TRANSFER' ? 'CHUYỂN KHOẢN' : 'TƯ VẤN SAU'}] ${course.title}${appliedCoupon ? ` | Mã KM: ${appliedCoupon.code}` : ''} | Tổng: ${finalPrice.toLocaleString()}đ`,
       });

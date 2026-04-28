@@ -89,6 +89,7 @@ model Course {
   description   String?
   content       String?
   price         Float
+  level         String?
   duration      String?
   thumbnail     String?
   isActive      Boolean        @default(true)

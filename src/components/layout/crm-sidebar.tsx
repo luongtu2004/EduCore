@@ -20,6 +20,7 @@ const crmGroups = [
     items: [
       { name: 'Dashboard', icon: LayoutDashboard, href: '/admin/crm' },
       { name: 'Khách hàng tiềm năng', icon: ClipboardList, href: '/admin/crm/leads' },
+      { name: 'Lịch hẹn (Calendar)', icon: Calendar, href: '/admin/crm/appointments' },
       { name: 'Pipeline (Phễu)', icon: GitBranch, href: '/admin/crm/pipeline' },
       { name: 'Đơn hàng (Orders)', icon: CreditCard, href: '/admin/crm/orders' },
       { name: 'Học viên (Students)', icon: GraduationCap, href: '/admin/crm/students' },
@@ -143,7 +144,11 @@ export function CRMSidebar() {
                             onClick={() => {
                               markAsRead(n.id);
                               setShowNotifications(false);
-                              router.push('/admin/crm/leads');
+                              if (n.leadId) {
+                                router.push(`/admin/crm/leads/${n.leadId}`);
+                              } else {
+                                router.push('/admin/crm/leads');
+                              }
                             }}
                             className={cn(
                               'w-full text-left px-5 py-4 border-b border-white/5 hover:bg-white/5 transition-all flex gap-3',

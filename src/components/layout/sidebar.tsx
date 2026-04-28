@@ -8,11 +8,12 @@ import {
   Bell, X, Phone, Mail, Settings, Ticket, MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '@/lib/socket-provider';
 import { useState } from 'react';
+import { Map } from 'lucide-react';
 
 const sidebarGroups = [
   {
@@ -26,8 +27,9 @@ const sidebarGroups = [
   {
     group: 'NỘI DUNG & CMS',
     items: [
-      { name: 'Bài viết', icon: FileText, href: '/admin/posts' },
+      { name: 'Lộ trình học', icon: Map, href: '/admin/learning-paths' },
       { name: 'Khóa học', icon: BookOpen, href: '/admin/courses' },
+      { name: 'Bài viết', icon: FileText, href: '/admin/posts' },
       { name: 'Cảm nghĩ', icon: MessageCircle, href: '/admin/testimonials' },
       { name: 'Danh mục', icon: Layers, href: '/admin/categories' },
       { name: 'Câu hỏi & Quiz', icon: GraduationCap, href: '/admin/cms/quiz' },
@@ -57,6 +59,7 @@ function timeAgo(date: Date) {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { notifications, unreadCount, markAsRead, clearAll } = useSocket();
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -144,7 +147,15 @@ export function Sidebar() {
                         notifications.map((n) => (
                           <button
                             key={n.id}
-                            onClick={() => { markAsRead(n.id); setShowNotifications(false); }}
+                            onClick={() => { 
+                              markAsRead(n.id); 
+                              setShowNotifications(false); 
+                              if (n.leadId) {
+                                router.push(`/admin/crm/leads/${n.leadId}`);
+                              } else {
+                                router.push('/admin/crm/leads');
+                              }
+                            }}
                             className={cn(
                               'w-full text-left px-5 py-4 border-b border-slate-50 hover:bg-slate-50 transition-all flex gap-3',
                               !n.read && 'bg-emerald-50/50'

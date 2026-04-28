@@ -468,7 +468,21 @@ export default function LeadDetailPage() {
                               <Clock className="h-4 w-4" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-200 leading-snug">{log.content}</p>
+                      <p className="text-sm font-bold text-slate-200 leading-snug">
+                        {(() => {
+                          let text = log.content || '';
+                          Object.entries(STATUS_CONFIG).forEach(([key, val]) => {
+                            text = text.replace(new RegExp(`\\b${key}\\b`, 'g'), val.label.toUpperCase());
+                          });
+                          text = text.replace(/\bWEBSITE\b/g, 'WEBSITE');
+                          text = text.replace(/\bFACEBOOK\b/g, 'FACEBOOK');
+                          text = text.replace(/\bZALO\b/g, 'ZALO');
+                          text = text.replace(/\bREFERRAL\b/g, 'GIỚI THIỆU');
+                          text = text.replace(/\bOFFLINE\b/g, 'TRỰC TIẾP');
+                          text = text.replace(/\bAI_TEST\b/g, 'TEST AI');
+                          return text;
+                        })()}
+                      </p>
                       <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1.5">
                         {new Date(log.createdAt).toLocaleString('vi-VN')}
                       </p>

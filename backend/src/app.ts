@@ -27,6 +27,7 @@ import { adminStatsRoutes } from './modules/cms/admin/admin.routes';
 import { settingsRoutes } from './modules/cms/settings/settings.routes';
 import { couponRoutes } from './modules/cms/coupons/coupons.routes';
 import { orderRoutes, contactRoutes } from './modules/cms/admin/extra.routes';
+import { appointmentRoutes } from './modules/crm/appointments/appointments.routes';
 
 const app = fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
 
@@ -70,6 +71,7 @@ app.register(settingsRoutes, { prefix: '/api/v1/cms/settings' });
 app.register(couponRoutes, { prefix: '/api/v1/cms/coupons' });
 app.register(orderRoutes, { prefix: '/api/v1/crm/orders' });
 app.register(contactRoutes, { prefix: '/api/v1/cms/contacts' });
+app.register(appointmentRoutes, { prefix: '/api/v1/crm/appointments' });
 
 app.get('/health', async () => ({ status: 'ok', service: 'EduCore' }));
 

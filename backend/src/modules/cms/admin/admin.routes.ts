@@ -127,6 +127,7 @@ export async function adminStatsRoutes(app: FastifyInstance) {
         paidOrders,
         totalRevenueAgg,
         revenueLastMonthAgg,
+        upcomingAppointments,
       ] = await Promise.all([
         db.collection('crm_leads').countDocuments(),
         db.collection('crm_leads').countDocuments({ createdAt: { $gte: startOfMonth } }),
@@ -143,6 +144,7 @@ export async function adminStatsRoutes(app: FastifyInstance) {
           { $match: { status: 'PAID', createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth } } },
           { $group: { _id: null, total: { $sum: '$amount' } } }
         ]).toArray(),
+        db.collection('crm_appointments').find({ startTime: { $gte: now } }).sort({ startTime: 1 }).limit(3).toArray(),
       ]);
 
       const totalRevenue = totalRevenueAgg[0]?.total || 0;
@@ -210,6 +212,13 @@ export async function adminStatsRoutes(app: FastifyInstance) {
             source: l.source,
             courseName: l.courseName,
             createdAt: l.createdAt,
+          })),
+          upcomingAppointments: upcomingAppointments.map((a: any) => ({
+            id: a._id.toString(),
+            title: a.title,
+            startTime: a.startTime,
+            type: a.type,
+            status: a.status,
           })),
         }
       });

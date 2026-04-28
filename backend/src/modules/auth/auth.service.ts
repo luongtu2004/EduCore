@@ -3,10 +3,6 @@ import bcrypt from 'bcryptjs';
 import { LoginInput } from './auth.schema';
 import { AppError } from '../../common/errors/AppError';
 
-import { FastifyInstance } from 'fastify';
-import bcrypt from 'bcryptjs';
-import { LoginInput } from './auth.schema';
-import { AppError } from '../../common/errors/AppError';
 import { MongoClient, ObjectId } from 'mongodb';
 
 export class AuthService {

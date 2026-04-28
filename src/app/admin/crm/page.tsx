@@ -3,7 +3,8 @@
 import {
   TrendingUp, Users, ClipboardList, Target, Zap, Activity,
   UserPlus, Phone, Clock, CheckSquare, ArrowUpRight, ArrowDownRight,
-  Home, ChevronRight, Loader2, DollarSign, BookOpen, BarChart3, MessageSquare
+  Home, ChevronRight, Loader2, DollarSign, BookOpen, BarChart3, MessageSquare,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -311,6 +312,49 @@ export default function CRMDashboard() {
                   );
                 })}
               </div>
+            )}
+          </div>
+
+          {/* UPCOMING APPOINTMENTS */}
+          <div className="bg-slate-950/50 border border-white/5 rounded-[2rem] p-8 flex-1">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-lg font-black text-white uppercase tracking-tight">Lịch hẹn sắp tới</h2>
+              <Link href="/admin/crm/appointments">
+                <CalendarIcon className="h-4 w-4 text-emerald-500 cursor-pointer" />
+              </Link>
+            </div>
+            {loading ? (
+              <div className="space-y-4">
+                 {[1,2].map(i => <div key={i} className="h-16 bg-white/5 rounded-2xl animate-pulse" />)}
+              </div>
+            ) : stats?.upcomingAppointments?.length > 0 ? (
+               <div className="space-y-3">
+                  {stats.upcomingAppointments.map((app: any, i: number) => (
+                    <motion.div 
+                      key={app.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex items-center gap-4 group hover:bg-slate-900 transition-all"
+                    >
+                       <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex flex-col items-center justify-center text-emerald-500">
+                          <span className="text-[10px] font-black leading-none">
+                             {new Date(app.startTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                       </div>
+                       <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-black text-white uppercase truncate">{app.title}</p>
+                          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                             {new Date(app.startTime).toLocaleDateString('vi-VN')}
+                          </p>
+                       </div>
+                    </motion.div>
+                  ))}
+               </div>
+            ) : (
+               <div className="py-10 text-center opacity-30">
+                  <p className="text-[10px] font-black uppercase tracking-widest">Không có lịch hẹn</p>
+               </div>
             )}
           </div>
 

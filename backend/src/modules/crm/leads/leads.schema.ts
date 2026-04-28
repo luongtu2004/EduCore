@@ -7,12 +7,12 @@ export const createLeadSchema = z.object({
   fullName: z.string().min(1, 'Họ tên không được để trống'),
   email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
   phone: z.string().min(10, 'Số điện thoại không hợp lệ'),
-  source: z.enum(LeadSourceList).optional(),
-  note: z.string().optional(),
-  courseName: z.string().optional(),
-  paymentMethod: z.string().optional(),
-  couponCode: z.string().optional(),
-  finalPrice: z.number().optional(),
+  source: z.enum(LeadSourceList).optional().nullable(),
+  note: z.string().optional().nullable(),
+  courseName: z.string().optional().nullable(),
+  paymentMethod: z.string().optional().nullable(),
+  couponCode: z.string().optional().nullable(),
+  finalPrice: z.number().optional().nullable(),
 });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
