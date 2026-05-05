@@ -141,14 +141,14 @@ export default function ContactsPage() {
       </div>
 
       {/* SEARCH BAR */}
-      <div className="mb-8 relative group">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+      <div className="mb-8 relative group w-full">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
         <input 
-            type="text" 
+            type="search" 
             placeholder="Tìm theo tên người gửi hoặc email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-16 pl-14 pr-6 rounded-[2rem] bg-white border border-slate-100 focus:border-emerald-500/50 focus:ring-8 focus:ring-emerald-500/5 transition-all text-sm font-bold outline-none shadow-sm"
+            className="w-full h-12 pl-14 pr-6 rounded-full bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium outline-none placeholder:text-slate-400 shadow-sm"
         />
       </div>
 

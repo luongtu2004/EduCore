@@ -11,7 +11,7 @@ export const createAppointmentSchema = z.object({
   endTime: z.string().or(z.date()),
   type: z.enum(AppointmentTypeList).default('CONSULTATION'),
   status: z.enum(AppointmentStatusList).default('SCHEDULED'),
-  note: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
   assignedTo: z.string().optional().nullable(),
 });
 

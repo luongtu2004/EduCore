@@ -6,7 +6,8 @@ import {
   Mail, Phone, Clock, Sparkles,
   BookOpen, LayoutGrid, CheckCircle2,
   X, ChevronRight, Home, Loader2, MoreVertical,
-  Trash2, User, UserPlus, ChevronLeft, Award, Eye
+  Trash2, User, UserPlus, ChevronLeft, Award, Eye,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -117,285 +118,286 @@ export default function CRMStudentsPage() {
   return (
     <>
       <div className="min-h-screen bg-slate-900 text-slate-300 font-sans antialiased selection:bg-emerald-500/30">
-      <div className="p-8 space-y-8">
-        
-        {/* BREADCRUMBS */}
-        <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600">
-          <Link href="/admin" className="hover:text-emerald-500 transition-colors flex items-center gap-1.5"><Home className="h-3 w-3" /> Dashboard</Link>
-          <ChevronRight className="h-3 w-3 opacity-30" />
-          <Link href="/admin/crm" className="hover:text-emerald-500 transition-colors">CRM</Link>
-          <ChevronRight className="h-3 w-3 opacity-30" />
-          <span className="text-white">Học viên</span>
-        </nav>
+        <div className="p-8 space-y-8">
 
-        {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tight italic mb-2">Học viên (Students)</h1>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">QUẢN LÝ LỘ TRÌNH VÀ TIẾN ĐỘ HỌC TẬP</p>
+          {/* BREADCRUMBS */}
+          <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600">
+            <Link href="/admin" className="hover:text-emerald-500 transition-colors flex items-center gap-1.5"><Home className="h-3 w-3" /> Dashboard</Link>
+            <ChevronRight className="h-3 w-3 opacity-30" />
+            <Link href="/admin/crm" className="hover:text-emerald-500 transition-colors">CRM</Link>
+            <ChevronRight className="h-3 w-3 opacity-30" />
+            <span className="text-white">Học viên</span>
+          </nav>
+
+          {/* HEADER SECTION */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-black text-white uppercase tracking-tight italic mb-2">Học viên (Students)</h1>
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">QUẢN LÝ LỘ TRÌNH VÀ TIẾN ĐỘ HỌC TẬP</p>
+            </div>
+            <Button
+              onClick={() => setAddModal(true)}
+              className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-8 font-black text-[11px] transition-all gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest border-none"
+            >
+              <UserPlus className="h-4 w-4" /> THÊM HỌC VIÊN
+            </Button>
           </div>
-          <Button 
-            onClick={() => setAddModal(true)}
-            className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-8 font-black text-[11px] transition-all gap-2 shadow-[0_0_20px_rgba(16,185,129,0.2)] uppercase tracking-widest border-none"
-          >
-            <UserPlus className="h-4 w-4" /> THÊM HỌC VIÊN
-          </Button>
-        </div>
 
         {/* SEARCH & FILTERS */}
-        <div className="flex flex-col lg:flex-row items-center gap-4 mb-10 relative">
+        <div className="flex flex-col lg:flex-row items-center gap-3 mb-10 relative">
           <div className="flex-1 relative group w-full">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <Search className="h-4.5 w-4.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
             </div>
             <input
-              type="text"
-              placeholder="Tìm theo tên, email hoặc số điện thoại..."
+              type="search"
+              placeholder="Tìm theo tên học viên, email hoặc số điện thoại..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm text-slate-200 placeholder:text-slate-600 outline-none shadow-inner"
+              className="w-full h-12 pl-12 pr-4 rounded-full bg-slate-950/50 border border-white/10 hover:border-white/20 focus:bg-slate-900 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium text-slate-200 placeholder:text-slate-600 outline-none shadow-sm backdrop-blur-sm"
             />
           </div>
 
-          {/* STATUS FILTER */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {[
-              { id: 'ALL', label: 'Tất cả' },
-              { id: 'ACTIVE', label: 'Đang học' },
-              { id: 'COMPLETED', label: 'Đã hoàn thành' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id)}
-                className={cn(
-                  'px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border',
-                  statusFilter === tab.id
-                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-900/20'
-                    : 'bg-white/5 border-white/5 text-slate-500 hover:text-white hover:bg-white/10'
-                )}
+          <div className="relative w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative group min-w-[200px] w-full sm:w-auto">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-12 pl-12 pr-10 rounded-full bg-slate-950/50 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 text-sm font-bold transition-all duration-300 shadow-sm backdrop-blur-sm outline-none appearance-none cursor-pointer w-full"
               >
-                {tab.label}
-                <span className="ml-2 text-[10px] opacity-60">
-                  ({tab.id === 'ALL' ? students.length : students.filter(s => tab.id === 'ACTIVE' ? s.status !== 'COMPLETED' : s.status === 'COMPLETED').length})
-                </span>
-              </button>
-            ))}
+                <option value="ALL">Trạng thái (Tất cả)</option>
+                <option value="ACTIVE">Đang học</option>
+                <option value="COMPLETED">Đã hoàn thành</option>
+              </select>
+              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 pointer-events-none group-focus-within:text-emerald-500" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+            </div>
+
+            {(searchQuery || statusFilter !== 'ALL') && (
+              <Button 
+                variant="ghost"
+                onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); }}
+                className="h-12 px-6 rounded-full border transition-all duration-300 text-sm font-bold bg-slate-950/50 border-white/10 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 shadow-sm backdrop-blur-sm w-full sm:w-auto"
+              >
+                Xóa bộ lọc
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* DATA TABLE */}
-        <div className="bg-slate-950 rounded-[2.5rem] border border-white/5 shadow-xl overflow-hidden relative">
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/5 bg-slate-900/50">
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[30%]">Học viên</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Khóa học</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Trạng thái</th>
-                  <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Ngày nhập học</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="py-24 text-center">
-                      <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mx-auto opacity-20" />
-                    </td>
+          {/* DATA TABLE */}
+          <div className="bg-slate-950 rounded-[2.5rem] border border-white/5 shadow-xl overflow-hidden relative">
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 bg-slate-900/50">
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest w-[30%]">Học viên</th>
+                    <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Khóa học</th>
+                    <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Trạng thái</th>
+                    <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Ngày nhập học</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Thao tác</th>
                   </tr>
-                ) : paginatedStudents.length > 0 ? (
-                  paginatedStudents.map((student, idx) => (
-                    <tr key={student.id} className="group hover:bg-slate-900/50 transition-all relative">
-                      <td className="px-8 py-6 relative">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-emerald-500 rounded-r-full group-hover:h-8 transition-all duration-300" />
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-500 group-hover:bg-emerald-500/10 group-hover:text-emerald-500 transition-all border border-white/5 shadow-inner">
-                            <User className="h-5 w-5" />
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="py-24 text-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mx-auto opacity-20" />
+                      </td>
+                    </tr>
+                  ) : paginatedStudents.length > 0 ? (
+                    paginatedStudents.map((student, idx) => (
+                      <tr key={student.id} className="group hover:bg-white/[0.03] transition-all relative">
+                        <td className="px-8 py-6 relative">
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-[14px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 font-black text-lg group-hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all">
+                              {student.fullName?.charAt(0)?.toUpperCase() || <User className="h-5 w-5" />}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-white">{student.fullName}</p>
+                              <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">{student.email}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-black text-white uppercase tracking-wider">{student.fullName}</p>
-                            <p className="text-[10px] font-bold text-slate-500 mt-1 tracking-widest">{student.email}</p>
+                        </td>
+                        <td className="px-6 py-6 text-center">
+                          <span className="text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
+                            <BookOpen className="h-3.5 w-3.5 text-emerald-500/70" />
+                            {student.courseName || 'IELTS Foundation'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-6 text-center">
+                          <div className="flex items-center justify-center">
+                            {student.status === 'COMPLETED' ? (
+                              <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 justify-center bg-blue-500/10 text-blue-500 border-blue-500/20 w-[130px]">
+                                <Award className="h-3 w-3" /> Đã hoàn thành
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 justify-center bg-emerald-500/10 text-emerald-500 border-emerald-500/20 w-[130px]">
+                                <CheckCircle2 className="h-3 w-3" /> Đang học
+                              </span>
+                            )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6 text-center">
-                        <span className="text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
-                          <BookOpen className="h-3.5 w-3.5 text-emerald-500/70" />
-                          {student.courseName || 'IELTS Foundation'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-6 text-center">
-                        <div className="flex items-center justify-center">
-                          {student.status === 'COMPLETED' ? (
-                            <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 justify-center bg-blue-500/10 text-blue-500 border-blue-500/20 w-[130px]">
-                              <Award className="h-3 w-3" /> Đã hoàn thành
-                            </span>
-                          ) : (
-                            <span className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 justify-center bg-emerald-500/10 text-emerald-500 border-emerald-500/20 w-[130px]">
-                              <CheckCircle2 className="h-3 w-3" /> Đang học
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-6 text-center">
-                        <div className="text-xs font-bold text-slate-500">
-                          {new Date(student.createdAt).toLocaleDateString('vi-VN')}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <Link href={`/admin/crm/students/${student.id}`}>
-                            <Button 
-                              size="icon" variant="ghost" 
-                              className="h-10 w-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 text-slate-500 hover:text-emerald-400 transition-all"
-                              title="Xem chi tiết"
+                        </td>
+                        <td className="px-6 py-6 text-center">
+                          <div className="text-xs font-bold text-slate-500">
+                            {new Date(student.createdAt).toLocaleDateString('vi-VN')}
+                          </div>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <Link href={`/admin/crm/students/${student.id}`}>
+                              <Button
+                                size="icon" variant="ghost"
+                                className="h-10 w-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 text-slate-500 hover:text-emerald-400 transition-all"
+                                title="Xem chi tiết"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            {student.status !== 'COMPLETED' && (
+                              <Button
+                                onClick={() => setConfirmComplete({ isOpen: true, id: student.id })}
+                                size="icon" variant="ghost"
+                                className="h-10 w-10 rounded-xl bg-white/5 hover:bg-blue-500/20 text-slate-500 hover:text-blue-400 transition-all"
+                                title="Đánh dấu hoàn thành"
+                              >
+                                <Award className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              onClick={() => setConfirmDelete({ isOpen: true, id: student.id })}
+                              size="icon" variant="ghost"
+                              className="h-10 w-10 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
+                              title="Xóa học viên"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </Link>
-                          {student.status !== 'COMPLETED' && (
-                            <Button 
-                              onClick={() => setConfirmComplete({ isOpen: true, id: student.id })}
-                              size="icon" variant="ghost" 
-                              className="h-10 w-10 rounded-xl bg-white/5 hover:bg-blue-500/20 text-slate-500 hover:text-blue-400 transition-all"
-                              title="Đánh dấu hoàn thành"
-                            >
-                              <Award className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button 
-                            onClick={() => setConfirmDelete({ isOpen: true, id: student.id })}
-                            size="icon" variant="ghost" 
-                            className="h-10 w-10 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
-                            title="Xóa học viên"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-32 text-center">
+                        <div className="flex flex-col items-center justify-center text-slate-500">
+                          <GraduationCap className="h-12 w-12 mb-4 opacity-20" />
+                          <p className="text-xs uppercase font-black tracking-widest">Không tìm thấy học viên nào</p>
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="py-32 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-500">
-                        <GraduationCap className="h-12 w-12 mb-4 opacity-20" />
-                        <p className="text-xs uppercase font-black tracking-widest">Không tìm thấy học viên nào</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          {/* PAGINATION */}
-          <div className="px-8 py-6 bg-white/5 flex items-center justify-between border-t border-white/5">
-            <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
-              Hiển thị {paginatedStudents.length} / {filteredStudents.length} dữ liệu
-            </p>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" size="icon" 
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" size="icon"
-                disabled={currentPage === totalPages || totalPages === 0}
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            {/* PAGINATION */}
+            <div className="px-8 py-6 bg-white/5 flex items-center justify-between border-t border-white/5">
+              <p className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
+                Hiển thị {paginatedStudents.length} / {filteredStudents.length} dữ liệu
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline" size="icon"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline" size="icon"
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
+
+          <ConfirmModal
+            isOpen={confirmDelete.isOpen}
+            onClose={() => setConfirmDelete({ isOpen: false, id: '' })}
+            onConfirm={() => handleDelete(confirmDelete.id)}
+            title="Xóa học viên"
+            message="Bạn có chắc chắn muốn xóa học viên này? Hành động này không thể hoàn tác."
+            confirmText="Xóa học viên"
+            cancelText="Hủy"
+            type="danger"
+          />
+
+          <ConfirmModal
+            isOpen={confirmComplete.isOpen}
+            onClose={() => setConfirmComplete({ isOpen: false, id: '' })}
+            onConfirm={() => handleComplete(confirmComplete.id)}
+            title="Hoàn thành khóa học"
+            message="Bạn xác nhận học viên này đã hoàn thành khóa học? Trạng thái sẽ được chuyển sang 'Đã hoàn thành'."
+            confirmText="Xác nhận hoàn thành"
+            cancelText="Hủy"
+            type="warning"
+          />
+
         </div>
-
-        <ConfirmModal
-          isOpen={confirmDelete.isOpen}
-          onClose={() => setConfirmDelete({ isOpen: false, id: '' })}
-          onConfirm={() => handleDelete(confirmDelete.id)}
-          title="Xóa học viên"
-          message="Bạn có chắc chắn muốn xóa học viên này? Hành động này không thể hoàn tác."
-          confirmText="Xóa học viên"
-          cancelText="Hủy"
-          type="danger"
-        />
-
-        <ConfirmModal
-          isOpen={confirmComplete.isOpen}
-          onClose={() => setConfirmComplete({ isOpen: false, id: '' })}
-          onConfirm={() => handleComplete(confirmComplete.id)}
-          title="Hoàn thành khóa học"
-          message="Bạn xác nhận học viên này đã hoàn thành khóa học? Trạng thái sẽ được chuyển sang 'Đã hoàn thành'."
-          confirmText="Xác nhận hoàn thành"
-          cancelText="Hủy"
-          type="warning"
-        />
-
       </div>
-    </div>
 
-    {/* ADD STUDENT MODAL */}
-    <AnimatePresence>
-      {addModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setAddModal(false)}
-        >
+      {/* ADD STUDENT MODAL */}
+      <AnimatePresence>
+        {addModal && (
           <motion.div
-            initial={{ scale: 0.95, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.95, y: 20 }}
-            onClick={e => e.stopPropagation()}
-            className="bg-slate-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-lg shadow-2xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setAddModal(false)}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-black text-white uppercase tracking-tight">Thêm Học Viên</h2>
-              <button onClick={() => setAddModal(false)} className="text-slate-500 hover:text-white"><X className="h-5 w-5" /></button>
-            </div>
-            <div className="space-y-4">
-              {[
-                { label: 'Họ và tên *', key: 'fullName', type: 'text', placeholder: 'Nguyễn Văn A' },
-                { label: 'Số điện thoại *', key: 'phone', type: 'tel', placeholder: '0901234567' },
-                { label: 'Email', key: 'email', type: 'email', placeholder: 'example@gmail.com' },
-                { label: 'Khóa học đang học', key: 'courseName', type: 'text', placeholder: 'IELTS Foundation' },
-              ].map(({ label, key, type, placeholder }) => (
-                <div key={key}>
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block">{label}</label>
-                  <input
-                    type={type}
-                    placeholder={placeholder}
-                    value={(addForm as any)[key]}
-                    onChange={e => setAddForm(prev => ({ ...prev, [key]: e.target.value }))}
-                    className="w-full h-12 px-4 rounded-xl bg-slate-950/50 border border-white/10 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-600"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-3 mt-6">
-              <Button onClick={() => setAddModal(false)} variant="outline" className="flex-1 h-11 rounded-xl border-white/10 text-slate-400 font-black text-xs">Hủy</Button>
-              <Button
-                onClick={handleAddStudent}
-                disabled={savingAdd}
-                className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border-none font-black text-xs gap-2"
-              >
-                {savingAdd ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-                Thêm học viên
-              </Button>
-            </div>
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-900 border border-white/10 rounded-[2rem] p-8 w-full max-w-lg shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-white uppercase tracking-tight">Thêm Học Viên</h2>
+                <button onClick={() => setAddModal(false)} className="text-slate-500 hover:text-white"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { label: 'Họ và tên *', key: 'fullName', type: 'text', placeholder: 'Nguyễn Văn A' },
+                  { label: 'Số điện thoại *', key: 'phone', type: 'tel', placeholder: '0901234567' },
+                  { label: 'Email', key: 'email', type: 'email', placeholder: 'example@gmail.com' },
+                  { label: 'Khóa học đang học', key: 'courseName', type: 'text', placeholder: 'IELTS Foundation' },
+                ].map(({ label, key, type, placeholder }) => (
+                  <div key={key}>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block">{label}</label>
+                    <input
+                      type={type}
+                      placeholder={placeholder}
+                      value={(addForm as any)[key]}
+                      onChange={e => setAddForm(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="w-full h-12 px-4 rounded-xl bg-slate-950/50 border border-white/10 text-sm text-slate-200 outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-600"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button onClick={() => setAddModal(false)} variant="outline" className="flex-1 h-11 rounded-xl border-white/10 text-slate-400 font-black text-xs">Hủy</Button>
+                <Button
+                  onClick={handleAddStudent}
+                  disabled={savingAdd}
+                  className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white border-none font-black text-xs gap-2"
+                >
+                  {savingAdd ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+                  Thêm học viên
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
     </>
   );
 }

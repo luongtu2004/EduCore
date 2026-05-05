@@ -105,14 +105,14 @@ export default function FAQsPage() {
 
       {/* SEARCH BAR */}
       <div className="mb-10">
-        <div className="relative group max-w-md">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+        <div className="relative group w-full">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
           <input
             type="search"
             placeholder="Tìm kiếm trong FAQs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-12 pr-5 rounded-full bg-[#f1f5f9] border-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all text-sm font-medium outline-none placeholder:text-slate-400"
+            className="w-full h-12 pl-12 pr-5 rounded-full bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium outline-none placeholder:text-slate-400 shadow-sm"
           />
         </div>
       </div>

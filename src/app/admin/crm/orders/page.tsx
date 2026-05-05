@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  CreditCard, Search, Filter, ChevronRight, 
+import {
+  CreditCard, Search, Filter, ChevronRight,
   ChevronLeft, Home, Loader2, MoreVertical,
   CheckCircle2, Clock, XCircle, ShoppingCart,
-  User, BookOpen, Trash2, Calendar
+  User, BookOpen, Trash2, Calendar, ChevronDown,
+  DollarSign, Activity, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -61,7 +62,7 @@ export default function CRMOrdersPage() {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchQuery.toLowerCase());
+      order.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -73,6 +74,13 @@ export default function CRMOrdersPage() {
   );
 
   const totalRevenue = orders.filter(o => o.status === 'PAID').reduce((acc, o) => acc + (o.amount || 0), 0);
+
+  const formatAmount = (amount: number) => {
+    if (amount >= 1000000) {
+      return (amount / 1000000).toFixed(1).replace('.0', '') + 'M';
+    }
+    return amount.toLocaleString('vi-VN') + 'đ';
+  };
 
   const handleDeleteOrder = async (id: string) => {
     try {
@@ -96,7 +104,7 @@ export default function CRMOrdersPage() {
       const dbId = orders.find(o => o.id === id)?.dbId || id;
       const response: any = await api.patch(`/crm/orders/${dbId}/status`, { status });
       if (response.success) {
-        toast.success('Đã cập nhật trạng thái');
+        toast.success('Cập nhật trạng thái thành công');
         fetchOrders();
       } else {
         throw new Error(response.message);
@@ -107,34 +115,37 @@ export default function CRMOrdersPage() {
   };
 
   const getStatusBadge = (status: string, id: string) => {
-    const commonClass = "w-[150px] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-1.5 justify-center outline-none transition-all cursor-pointer";
+    const commonClass = "w-[160px] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 justify-center outline-none transition-all cursor-pointer shadow-sm active:scale-95";
     switch (status) {
       case 'PAID':
         return (
-          <span className={cn(commonClass, "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 cursor-default")}>
-            <CheckCircle2 className="h-3 w-3" /> ĐÃ THANH TOÁN
+          <span className={cn(commonClass, "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 cursor-default shadow-emerald-500/5")}>
+            <CheckCircle2 className="h-3.5 w-3.5" /> ĐÃ THANH TOÁN
           </span>
         );
       case 'PENDING':
         return (
-          <select 
-            value="PENDING" 
-            onChange={(e) => {
-              if (e.target.value !== 'PENDING') {
-                setConfirmStatus({ isOpen: true, id, status: e.target.value });
-              }
-            }}
-            className={cn(commonClass, "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20")}
-          >
-            <option value="PENDING">CHỜ XỬ LÝ</option>
-            <option value="PAID">XÁC NHẬN THANH TOÁN</option>
-            <option value="CANCELLED">HỦY ĐƠN HÀNG</option>
-          </select>
+          <div className="relative group/select">
+            <select
+              value="PENDING"
+              onChange={(e) => {
+                if (e.target.value !== 'PENDING') {
+                  setConfirmStatus({ isOpen: true, id, status: e.target.value });
+                }
+              }}
+              className={cn(commonClass, "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 appearance-none")}
+            >
+              <option value="PENDING">CHỜ XỬ LÝ</option>
+              <option value="PAID">XÁC NHẬN THANH TOÁN</option>
+              <option value="CANCELLED">HỦY ĐƠN HÀNG</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-amber-500/50 pointer-events-none group-hover/select:text-amber-500 transition-colors" />
+          </div>
         );
       case 'CANCELLED':
         return (
-          <span className={cn(commonClass, "bg-rose-500/10 text-rose-500 border-rose-500/20 cursor-default opacity-80")}>
-            <XCircle className="h-3 w-3" /> ĐÃ HỦY
+          <span className={cn(commonClass, "bg-rose-500/10 text-rose-400 border-rose-500/20 cursor-default opacity-80 shadow-rose-500/5")}>
+            <XCircle className="h-3.5 w-3.5" /> ĐÃ HỦY
           </span>
         );
       default:
@@ -143,59 +154,91 @@ export default function CRMOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-400 p-8">
+    <div className="min-h-screen bg-[#0b0f1a] text-slate-400 p-8">
       {/* BREADCRUMBS */}
       <nav className="flex items-center gap-2 mb-6 text-[10px] font-black uppercase tracking-widest text-slate-600">
         <Link href="/admin/crm" className="hover:text-emerald-500 transition-colors flex items-center gap-1.5">
           <Home className="h-3 w-3" /> CRM
         </Link>
         <ChevronRight className="h-3 w-3 opacity-30" />
-        <span className="text-white">Quản lý Đơn hàng</span>
+        <span className="text-white">QUẢN LÝ ĐƠN HÀNG</span>
       </nav>
 
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-2.5 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.4)]" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+        <div className="flex items-center gap-5">
+          <div className="h-14 w-3 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.3)]" />
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">Hệ thống đơn hàng</h1>
-            <p className="text-xs font-bold text-slate-500 mt-2 uppercase tracking-widest leading-none">Quản lý giao dịch và doanh thu khóa học</p>
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase leading-none italic">Hệ thống đơn hàng</h1>
+            <div className="flex items-center gap-3 mt-3">
+              <span className="flex items-center gap-1.5 text-[9px] font-black text-emerald-500 bg-emerald-500/5 px-2 py-1 rounded border border-emerald-500/10 uppercase tracking-widest">
+                <Activity className="h-3 w-3" /> LIVE DATA
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-           <div className="px-6 py-3 bg-slate-950 rounded-2xl border border-white/5 shadow-inner">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Tổng doanh thu</p>
-              <p className="text-2xl font-black text-emerald-500">{totalRevenue.toLocaleString('vi-VN')}đ</p>
-           </div>
+
+        <div className="flex items-center gap-6">
+          <div className="px-8 py-4 bg-[#111827] rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden group">
+            <div className="absolute -right-4 -top-4 h-16 w-16 bg-emerald-500/10 rounded-full blur-2xl transition-transform group-hover:scale-150" />
+            <div className="relative z-10">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                <DollarSign className="h-3 w-3 text-emerald-500" /> TỔNG DOANH THU
+              </p>
+              <p className="text-3xl font-black text-white italic tracking-tighter">
+                {formatAmount(totalRevenue)}
+                <span className="text-[10px] text-slate-600 font-black ml-2 uppercase italic">Collected</span>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* FILTERS */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-10">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
+      {/* SEARCH & FILTERS */}
+      <div className="flex flex-col lg:flex-row items-center gap-3 mb-10 relative">
+        <div className="flex-1 relative group w-full">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <Search className="h-4.5 w-4.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
+          </div>
           <input
-            type="text"
+            type="search"
             placeholder="Tìm theo mã đơn hoặc tên học viên..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-950 border border-white/5 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm text-slate-200 outline-none"
+            className="w-full h-12 pl-12 pr-4 rounded-full bg-slate-950/50 border border-white/10 hover:border-white/20 focus:bg-slate-900 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium text-slate-200 placeholder:text-slate-600 outline-none shadow-sm backdrop-blur-sm"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-12 px-6 rounded-xl bg-slate-950 border border-white/5 text-xs font-bold text-slate-400 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer uppercase tracking-widest"
-        >
-          <option value="All">Tất cả trạng thái</option>
-          <option value="PAID">ĐÃ THANH TOÁN</option>
-          <option value="PENDING">CHỜ XỬ LÝ</option>
-          <option value="CANCELLED">ĐÃ HỦY</option>
-        </select>
+        
+        <div className="relative w-full lg:w-auto flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative group min-w-[200px] w-full sm:w-auto">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-12 pl-12 pr-10 rounded-full bg-slate-950/50 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 text-sm font-bold transition-all duration-300 shadow-sm backdrop-blur-sm outline-none appearance-none cursor-pointer w-full"
+            >
+              <option value="All">Trạng thái (Tất cả)</option>
+              <option value="PAID">Đã thanh toán</option>
+              <option value="PENDING">Chờ xử lý</option>
+              <option value="CANCELLED">Đã hủy</option>
+            </select>
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 pointer-events-none group-focus-within:text-emerald-500" />
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none group-hover:text-emerald-500 transition-colors" />
+          </div>
+          
+          {(searchQuery || statusFilter !== 'All') && (
+            <Button 
+              variant="ghost"
+              onClick={() => { setSearchQuery(''); setStatusFilter('All'); }}
+              className="h-12 px-6 rounded-full border transition-all duration-300 text-sm font-bold bg-slate-950/50 border-white/10 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 shadow-sm backdrop-blur-sm w-full sm:w-auto"
+            >
+              Xóa bộ lọc
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* DATA TABLE */}
-      <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="bg-[#111827] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/5 bg-white/5">
@@ -208,20 +251,20 @@ export default function CRMOrdersPage() {
           </thead>
           <tbody className="divide-y divide-white/5">
             {isLoading ? (
-               <tr>
-                  <td colSpan={5} className="py-24 text-center">
-                    <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mx-auto opacity-20" />
-                  </td>
-               </tr>
+              <tr>
+                <td colSpan={5} className="py-24 text-center">
+                  <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mx-auto opacity-20" />
+                </td>
+              </tr>
             ) : paginatedOrders.length > 0 ? (
               paginatedOrders.map((order, idx) => (
                 <tr key={order.id} className="group hover:bg-white/[0.03] transition-all relative">
                   <td className="px-8 py-6 relative">
                     {/* HOVER INDICATOR BAR */}
-                    <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-emerald-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 scale-y-50 group-hover:scale-y-100" />
-                    
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-gray-500 group-hover:text-emerald-500 transition-colors">
+                      <div className="h-12 w-12 rounded-[14px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all">
                         <ShoppingCart className="h-5 w-5" />
                       </div>
                       <div>
@@ -235,7 +278,7 @@ export default function CRMOrdersPage() {
                   <td className="px-6 py-6 text-center">
                     <div className="flex flex-col items-center gap-1">
                       <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1.5">
-                         <BookOpen className="h-3.5 w-3.5 text-emerald-500/50" /> {order.courseName}
+                        <BookOpen className="h-3.5 w-3.5 text-emerald-500/50" /> {order.courseName}
                       </span>
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
                         <Calendar className="h-3 w-3" /> {new Date(order.createdAt).toLocaleDateString('vi-VN')}
@@ -251,23 +294,25 @@ export default function CRMOrdersPage() {
                     </div>
                   </td>
                   <td className="px-8 py-6 text-right">
-                     <div className="flex items-center justify-end gap-2">
-                       <Link href={`/admin/crm/orders/${order.id}`}>
-                         <Button 
-                           size="icon" variant="ghost" 
-                           className="h-10 w-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 text-slate-500 hover:text-emerald-500 transition-all opacity-0 group-hover:opacity-100"
-                         >
-                            <BookOpen className="h-4 w-4" />
-                         </Button>
-                       </Link>
-                       <Button 
-                         size="icon" variant="ghost" 
-                         onClick={() => setConfirmDelete({ isOpen: true, id: order.id })}
-                         className="h-10 w-10 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
-                       >
-                          <Trash2 className="h-4 w-4" />
-                       </Button>
-                     </div>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`/admin/crm/orders/${order.id}`}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-10 w-10 rounded-xl bg-white/5 hover:bg-emerald-500/20 text-slate-500 hover:text-emerald-500 transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <BookOpen className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setConfirmDelete({ isOpen: true, id: order.id })}
+                        className="h-10 w-10 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -288,15 +333,15 @@ export default function CRMOrdersPage() {
             Hiển thị {paginatedOrders.length} / {filteredOrders.length} dữ liệu
           </p>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" size="icon" 
+            <Button
+              variant="outline" size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               className="h-9 w-9 rounded-full border-white/5 bg-slate-950 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button 
+            <Button
               variant="outline" size="icon"
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}

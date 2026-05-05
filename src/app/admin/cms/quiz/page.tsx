@@ -104,13 +104,13 @@ export default function QuizManagementPage() {
       {/* SEARCH & FILTERS BAR */}
       <div className="flex flex-col lg:flex-row gap-3 mb-10">
         <div className="flex-1 relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
           <input
             type="search"
             placeholder="Tìm kiếm câu hỏi, nội dung test..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-12 pr-5 rounded-full bg-[#f1f5f9] border-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all text-sm font-medium outline-none placeholder:text-slate-400"
+            className="w-full h-12 pl-12 pr-5 rounded-full bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium outline-none placeholder:text-slate-400 shadow-sm"
           />
         </div>
         <div className="relative group min-w-[220px]">
@@ -118,7 +118,7 @@ export default function QuizManagementPage() {
           <select
             value={sectionFilter}
             onChange={(e) => setSectionFilter(e.target.value)}
-            className="w-full h-12 pl-12 pr-10 rounded-full bg-[#f1f5f9] hover:bg-white border-transparent hover:border-slate-100 border transition-all text-xs font-bold text-slate-600 shadow-sm shadow-transparent hover:shadow-md appearance-none outline-none cursor-pointer uppercase tracking-wider"
+            className="w-full h-12 pl-12 pr-10 rounded-full bg-white border border-slate-200 hover:border-slate-300 transition-all text-xs font-bold text-slate-600 shadow-sm appearance-none outline-none cursor-pointer uppercase tracking-wider"
           >
             <option value="All">TẤT CẢ PHẦN TEST</option>
             <option value="foundation">FOUNDATION</option>

@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
+import { sendStudentAccountEmail } from '../../../utils/mailer';
 
 export async function orderRoutes(app: FastifyInstance) {
   const mongoClient = new MongoClient(process.env.DATABASE_URL || '');
@@ -116,7 +117,9 @@ export async function orderRoutes(app: FastifyInstance) {
             }
           }
 
+          const studentCode = `STU-${Date.now().toString().slice(-6)}`;
           const newStudent = {
+            studentCode: studentCode,
             fullName: order.studentName,
             email: email,
             phone: phone,
@@ -148,6 +151,15 @@ export async function orderRoutes(app: FastifyInstance) {
                 createdAt: new Date(),
                 updatedAt: new Date()
               });
+
+              // Send email notification
+              await sendStudentAccountEmail(
+                email,
+                order.studentName,
+                order.courseName || 'Khóa học',
+                studentCode,
+                defaultPassword
+              );
             }
           }
         }
@@ -206,6 +218,37 @@ export async function contactRoutes(app: FastifyInstance) {
       return { success: true, message: 'Đã cập nhật trạng thái' };
     } catch (error) {
       return { success: false, message: 'Lỗi cập nhật liên hệ' };
+    }
+  });
+
+  // POST Create Contact
+  app.post('', async (request, reply) => {
+    const { name, email, phone, message } = request.body as any;
+    if (!name || !phone) return { success: false, message: 'Tên và số điện thoại là bắt buộc' };
+    try {
+      await mongoClient.connect();
+      const db = mongoClient.db();
+      
+      const newContact = {
+        name,
+        email,
+        phone,
+        message,
+        status: 'PENDING',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      await db.collection('cms_contacts').insertOne(newContact);
+
+      // Emit socket event for new contact if we have io instance attached
+      if ((app as any).io) {
+        (app as any).io.emit('newContact', newContact);
+      }
+
+      return { success: true, message: 'Đã gửi liên hệ thành công' };
+    } catch (error) {
+      return { success: false, message: 'Lỗi khi gửi liên hệ' };
     }
   });
 }

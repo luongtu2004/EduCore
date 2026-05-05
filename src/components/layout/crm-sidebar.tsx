@@ -57,6 +57,12 @@ export function CRMSidebar() {
   const { notifications, unreadCount, markAsRead, clearAll } = useSocket();
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
   return (
     <aside className="w-72 shrink-0 bg-slate-950 border-r border-slate-900 flex flex-col h-screen text-slate-400">
       {/* BRANDING */}
@@ -207,22 +213,22 @@ export function CRMSidebar() {
                     className={cn(
                       "flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all relative group overflow-hidden",
                       isActive
-                        ? "text-white font-bold bg-white/5"
+                        ? "text-white font-bold bg-white/10"
                         : "hover:text-white hover:bg-white/5"
                     )}
                   >
                     <item.icon className={cn(
-                      "h-5 w-5 transition-colors",
-                      isActive ? "text-emerald-500" : "text-slate-600 group-hover:text-emerald-500"
+                      "h-5 w-5 transition-all duration-300",
+                      isActive 
+                        ? "text-white scale-110" 
+                        : "text-slate-500 group-hover:text-white group-hover:scale-110"
                     )} />
-                    <span className="text-sm tracking-tight">{item.name}</span>
-
-                    {isActive && (
-                      <motion.div
-                        layoutId="crm-indicator"
-                        className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 rounded-r-full shadow-[2px_0_10px_rgba(16,185,129,0.5)]"
-                      />
-                    )}
+                    <span className={cn(
+                      "text-sm tracking-tight transition-colors",
+                      isActive ? "text-white font-black" : "group-hover:text-white"
+                    )}>
+                      {item.name}
+                    </span>
                   </Link>
                 );
               })}
@@ -241,7 +247,7 @@ export function CRMSidebar() {
           <ExternalLink className="h-4 w-4" />
           Xem Website
         </Link>
-        <button className="flex items-center gap-3 px-5 py-3 w-full rounded-xl text-red-500/80 hover:bg-red-500/5 transition-all text-xs font-bold group">
+        <button onClick={handleLogout} className="flex items-center gap-3 px-5 py-3 w-full rounded-xl text-red-500/80 hover:bg-red-500/5 transition-all text-xs font-bold group">
           <LogOut className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Đăng xuất
         </button>

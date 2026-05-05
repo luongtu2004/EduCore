@@ -143,11 +143,11 @@ export default function CRMPipelinePage() {
             <Search className="h-5 w-5 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
           </div>
           <input
-            type="text"
+            type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm theo tên hoặc số điện thoại khách hàng..."
-            className="w-full h-14 pl-14 pr-5 rounded-2xl bg-slate-950/50 border border-white/5 hover:border-white/10 focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-base text-slate-200 placeholder:text-slate-600 outline-none shadow-inner"
+            className="w-full h-12 pl-14 pr-5 rounded-full bg-slate-950/50 border border-white/10 focus:bg-slate-900 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium text-slate-200 placeholder:text-slate-600 outline-none shadow-lg shadow-black/20"
           />
         </div>
       </div>

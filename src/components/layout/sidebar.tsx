@@ -63,6 +63,12 @@ export function Sidebar() {
   const { notifications, unreadCount, markAsRead, clearAll } = useSocket();
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
   return (
     <aside className="w-72 h-screen bg-white border-r border-gray-100 flex flex-col fixed left-0 top-0 z-40">
       {/* BRANDING */}
@@ -247,7 +253,7 @@ export function Sidebar() {
           <ExternalLink className="h-4 w-4" />
           Xem Website
         </Link>
-        <button className="flex items-center gap-3 px-5 py-3 w-full rounded-xl text-red-500 hover:bg-red-50/50 transition-all text-xs font-bold group">
+        <button onClick={handleLogout} className="flex items-center gap-3 px-5 py-3 w-full rounded-xl text-red-500 hover:bg-red-50/50 transition-all text-xs font-bold group">
           <LogOut className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Đăng xuất
         </button>

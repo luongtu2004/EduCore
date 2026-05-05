@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import {
   MessageSquare, Search, Trash2, ChevronRight, ChevronLeft,
-  Home, Loader2, Phone, Mail, Calendar, CheckCircle2, Clock, Eye, User
+  Home, Loader2, Phone, Mail, Calendar, CheckCircle2, Clock, Eye, User,
+  ChevronDown, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,12 +13,13 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { ConfirmModal } from '@/components/modals/confirm-modal';
+import { useSocket } from '@/lib/socket-provider';
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  PENDING: { label: 'Chờ xử lý', className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  CONTACTED: { label: 'Đã liên hệ', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  RESOLVED: { label: 'Đã xử lý', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  CLOSED: { label: 'Đã đóng', className: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
+const STATUS_MAP: Record<string, { label: string; className: string; color: string }> = {
+  PENDING: { label: 'Chờ xử lý', className: 'bg-amber-500/10 text-amber-400 border-amber-500/20', color: 'amber' },
+  CONTACTED: { label: 'Đã liên hệ', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20', color: 'blue' },
+  RESOLVED: { label: 'Đã xử lý', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', color: 'emerald' },
+  CLOSED: { label: 'Đã đóng', className: 'bg-slate-500/10 text-slate-400 border-slate-500/20', color: 'slate' },
 };
 
 export default function CRMContactsPage() {
@@ -29,8 +31,33 @@ export default function CRMContactsPage() {
   const [selected, setSelected] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string }>({ isOpen: false, id: '' });
   const itemsPerPage = 10;
+  const { socket } = useSocket();
 
   useEffect(() => { fetchContacts(); }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('newContact', (newContact) => {
+        setContacts((prev) => {
+          if (prev.find((c) => c.id === newContact.id)) return prev;
+          toast.success(`Có liên hệ mới từ: ${newContact.name || 'Khách ẩn danh'}`, {
+            icon: '💬',
+            style: {
+              borderRadius: '10px',
+              background: '#0f172a',
+              color: '#fff',
+              border: '1px solid #1e293b'
+            }
+          });
+          return [newContact, ...prev];
+        });
+      });
+
+      return () => {
+        socket.off('newContact');
+      };
+    }
+  }, [socket]);
 
   const fetchContacts = async () => {
     setIsLoading(true);
@@ -110,28 +137,46 @@ export default function CRMContactsPage() {
       </div>
 
       {/* FILTERS */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-8">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="w-full relative group">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
+          </div>
           <input
-            type="text"
+            type="search"
             placeholder="Tìm theo tên, email hoặc số điện thoại..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-950/50 border border-white/5 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm text-slate-200 outline-none"
+            className="w-full h-12 pl-12 pr-4 rounded-full bg-slate-950/50 border border-white/10 focus:bg-slate-900 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium text-slate-200 placeholder:text-slate-600 outline-none shadow-lg shadow-black/20"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-12 px-5 rounded-xl bg-slate-950/50 border border-white/5 text-xs font-bold text-slate-400 focus:border-emerald-500 transition-all outline-none appearance-none cursor-pointer uppercase tracking-widest"
-        >
-          <option value="All">Tất cả</option>
-          <option value="PENDING">Chờ xử lý</option>
-          <option value="CONTACTED">Đã liên hệ</option>
-          <option value="RESOLVED">Đã xử lý</option>
-          <option value="CLOSED">Đã đóng</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-1 shrink-0 bg-slate-900/40 p-1.5 rounded-2xl border border-slate-800/50 w-fit">
+          <button 
+            onClick={() => setStatusFilter('All')} 
+            className={cn(
+              "px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+              statusFilter === 'All' ? "bg-slate-800 text-white shadow-lg" : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+            )}
+          >
+             Tất cả
+          </button>
+          {Object.entries(STATUS_MAP).map(([key, config]) => {
+            const isSelected = statusFilter === key;
+            return (
+              <button 
+                key={key} 
+                onClick={() => setStatusFilter(key)}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                  isSelected ? `bg-${config.color}-500/10 text-${config.color}-400 shadow-lg shadow-${config.color}-500/5` : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                )}
+              >
+                 <div className={`h-2 w-2 rounded-full bg-${config.color}-500 ${isSelected ? 'animate-pulse' : ''}`} />
+                 {config.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -162,7 +207,7 @@ export default function CRMContactsPage() {
                       className={cn("group hover:bg-white/[0.03] transition-all relative cursor-pointer", isSelected && "bg-emerald-500/5")}
                     >
                       <td className="px-8 py-5 relative">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="flex items-center gap-4">
                           <div className={cn("h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm border transition-all",
                             (contact.status === 'PENDING' || !contact.status) ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-white/5 border-white/5 text-slate-500"
@@ -257,10 +302,11 @@ export default function CRMContactsPage() {
                     </a>
                   )}
                   {selected.email && (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                      <Mail className="h-4 w-4 text-slate-600" />
-                      <span className="text-sm font-bold text-slate-300 truncate">{selected.email}</span>
-                    </div>
+                    <a href={`mailto:${selected.email}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-indigo-500/10 transition-all group">
+                      <Mail className="h-4 w-4 text-slate-600 group-hover:text-indigo-500" />
+                      <span className="text-sm font-bold text-slate-300 group-hover:text-white truncate">{selected.email}</span>
+                      <span className="ml-auto text-[9px] font-black text-indigo-500 opacity-0 group-hover:opacity-100 uppercase tracking-widest">Phản hồi</span>
+                    </a>
                   )}
                   {selected.createdAt && (
                     <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">

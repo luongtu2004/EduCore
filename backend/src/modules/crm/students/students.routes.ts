@@ -112,4 +112,50 @@ export async function studentRoutes(app: FastifyInstance) {
       return { success: false, message: 'Lỗi tải chi tiết học viên' };
     }
   });
+
+  // UPDATE Student Progress
+  app.patch('/:studentId/progress/:lessonId', {
+    preHandler: [app.authenticate]
+  }, async (request, reply) => {
+    const { studentId, lessonId } = request.params as { studentId: string, lessonId: string };
+    const { isCompleted } = request.body as { isCompleted: boolean };
+    try {
+      await mongoClient.connect();
+      const db = mongoClient.db();
+      
+      const updateDoc = {
+        $set: {
+          studentId: studentId,
+          lessonId: lessonId,
+          isCompleted,
+          completedAt: isCompleted ? new Date() : null
+        }
+      };
+      
+      await db.collection('lms_lesson_progress').updateOne(
+        { studentId: studentId, lessonId: lessonId },
+        updateDoc,
+        { upsert: true }
+      );
+      
+      return { success: true, message: 'Đã cập nhật tiến độ bài học' };
+    } catch (error) {
+      return { success: false, message: 'Lỗi cập nhật tiến độ' };
+    }
+  });
+
+  // GET Student Progress
+  app.get('/:studentId/progress', {
+    preHandler: [app.authenticate]
+  }, async (request, reply) => {
+    const { studentId } = request.params as { studentId: string };
+    try {
+      await mongoClient.connect();
+      const db = mongoClient.db();
+      const progress = await db.collection('lms_lesson_progress').find({ studentId: studentId }).toArray();
+      return { success: true, data: progress };
+    } catch (error) {
+      return { success: false, message: 'Lỗi tải tiến độ' };
+    }
+  });
 }

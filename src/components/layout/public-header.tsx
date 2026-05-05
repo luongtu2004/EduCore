@@ -9,6 +9,7 @@ import {
   Home, BookOpen, Map, FileText, GraduationCap
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const navLinks = [
   { title: 'Trang chủ', href: '/', icon: Home },
@@ -20,15 +21,29 @@ const navLinks = [
 export function PublicHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
+    // Check login state
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      setIsLoggedIn(!!token);
+    }
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setIsProfileOpen(false);
+    router.push('/login');
+  };
 
   return (
     <header
@@ -129,7 +144,7 @@ export function PublicHeader() {
                         </div>
 
                         <div className="mt-1 p-1 border-t border-gray-100">
-                          <button className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all text-left">
+                          <button onClick={handleLogout} className="flex w-full items-center gap-3 px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all text-left">
                             <LogOut className="h-4 w-4" />
                             Đăng xuất
                           </button>

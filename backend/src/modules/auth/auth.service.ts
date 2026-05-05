@@ -18,7 +18,9 @@ export class AuthService {
     try {
       await this.mongoClient.connect();
       const db = this.mongoClient.db();
-      const user = await db.collection('users').findOne({ email: input.email });
+      const user = await db.collection('users').findOne({ 
+        $or: [{ email: input.email }, { phone: input.email }] 
+      });
 
       if (!user) {
         console.log('! Không tìm thấy người dùng');

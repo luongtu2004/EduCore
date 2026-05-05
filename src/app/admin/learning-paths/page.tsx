@@ -74,7 +74,7 @@ export default function LearningPathsPage() {
     setIsModalOpen(true);
   };
 
-  const filteredPaths = paths.filter(p => 
+  const filteredPaths = paths.filter(p =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -93,7 +93,7 @@ export default function LearningPathsPage() {
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase mb-1">LỘ TRÌNH HỌC</h1>
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.4em]">QUẢN LÝ CÁC CHƯƠNG TRÌNH ĐÀO TẠO</p>
         </div>
-        <Button 
+        <Button
           onClick={handleAdd}
           className="h-12 rounded-lg bg-[#065f46] hover:bg-[#047857] text-white px-6 font-bold text-[11px] transition-all gap-2.5 shadow-lg shadow-emerald-900/5 uppercase tracking-wider"
         >
@@ -103,14 +103,14 @@ export default function LearningPathsPage() {
 
       {/* SEARCH BAR */}
       <div className="mb-10">
-        <div className="relative group max-w-md">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+        <div className="relative group w-full">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
           <input
             type="search"
-            placeholder="Tìm kiếm lộ trình..."
+            placeholder="Tìm kiếm lộ trình học..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-12 pr-5 rounded-full bg-[#f1f5f9] border-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all text-sm font-medium outline-none placeholder:text-slate-400"
+            className="w-full h-12 pl-12 pr-5 rounded-full bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium outline-none placeholder:text-slate-400 shadow-sm"
           />
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function LearningPathsPage() {
               <div className="h-16 w-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all shrink-0">
                 <Map className="h-8 w-8 opacity-60 group-hover:opacity-100 transition-opacity" />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <h3 className="text-xl font-black text-slate-900 leading-tight mb-2 uppercase">
                   {path.title}
@@ -153,11 +153,11 @@ export default function LearningPathsPage() {
               <div className="flex items-center gap-2 shrink-0 md:pl-6 md:border-l border-slate-100 pt-4 md:pt-0">
                 <Button
                   onClick={() => toggleStatus(path)}
-                  variant="outline" 
+                  variant="outline"
                   className={cn(
                     "h-9 px-4 rounded-full font-black text-[9px] uppercase tracking-widest transition-all gap-1.5",
-                    path.isActive 
-                      ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100" 
+                    path.isActive
+                      ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
                       : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
                   )}
                 >

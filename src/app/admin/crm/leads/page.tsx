@@ -101,8 +101,8 @@ export default function CRMLeadsPage() {
         (activeTab === 'NEW' && (lead.status?.toUpperCase() === 'NEW' || lead.status?.toUpperCase() === 'MỚI')) ||
         (activeTab === 'PROCESSING' && ['CONTACTED', 'CONSULTING', 'TRIAL_LEARNING', 'IN_PROGRESS'].includes(lead.status?.toUpperCase() || ''));
 
-      const matchesSource = 
-        activeSource === 'ALL' || 
+      const matchesSource =
+        activeSource === 'ALL' ||
         (lead.source?.toUpperCase() === activeSource.toUpperCase());
 
       return matchesSearch && matchesTab && matchesSource;
@@ -130,14 +130,14 @@ export default function CRMLeadsPage() {
   }, [searchQuery, activeTab, activeSource]);
 
   const STATUS_MAP: Record<string, { label: string; className: string }> = {
-    NEW:             { label: 'Mới đăng ký',     className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-    CONTACTED:       { label: 'Đã liên hệ',      className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    CONSULTING:      { label: 'Đang tư vấn',     className: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
-    TRIAL_LEARNING:  { label: 'Học thử',         className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-    WON:             { label: 'Đã đăng ký HV',    className: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
-    IN_PROGRESS:     { label: 'Đang xử lý',     className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-    LOST:            { label: 'Không tiếp cận',  className: 'bg-slate-500/10 text-slate-500 border-slate-500/20' },
-    CONVERTED:       { label: 'Đã chuyển đổi',    className: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
+    NEW: { label: 'Mới đăng ký', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    CONTACTED: { label: 'Đã liên hệ', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    CONSULTING: { label: 'Đang tư vấn', className: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
+    TRIAL_LEARNING: { label: 'Học thử', className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+    WON: { label: 'Đã đăng ký HV', className: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
+    IN_PROGRESS: { label: 'Đang xử lý', className: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    LOST: { label: 'Không tiếp cận', className: 'bg-slate-500/10 text-slate-500 border-slate-500/20' },
+    CONVERTED: { label: 'Đã chuyển đổi', className: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
   };
 
   const getStatus = (status: string) =>
@@ -172,17 +172,17 @@ export default function CRMLeadsPage() {
       </div>
 
       {/* FILTERS & SEARCH */}
-      <div className="flex flex-col lg:flex-row items-center gap-4 mb-10 relative">
+      <div className="flex flex-col lg:flex-row items-center gap-3 mb-10 relative">
         <div className="flex-1 relative group w-full">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <Search className="h-4.5 w-4.5 text-slate-500 group-focus-within:text-emerald-500 transition-colors duration-300" />
           </div>
           <input
-            type="text"
+            type="search"
             placeholder="Tìm theo tên, email hoặc số điện thoại..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 focus:bg-slate-950 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm text-slate-200 placeholder:text-slate-600 outline-none shadow-inner"
+            className="w-full h-12 pl-12 pr-4 rounded-full bg-slate-950/50 border border-white/10 hover:border-white/20 focus:bg-slate-900 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium text-slate-200 placeholder:text-slate-600 outline-none shadow-sm backdrop-blur-sm"
           />
         </div>
 
@@ -190,13 +190,13 @@ export default function CRMLeadsPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "h-12 px-6 rounded-xl border transition-all duration-300 flex items-center justify-center gap-2.5 text-sm font-bold whitespace-nowrap w-full lg:w-auto shadow-sm backdrop-blur-sm",
+              "h-12 px-6 rounded-full border transition-all duration-300 flex items-center justify-center gap-2.5 text-sm font-bold whitespace-nowrap w-full lg:w-auto shadow-sm backdrop-blur-sm",
               showFilters
-                ? "bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-900/30"
-                : "bg-slate-950/50 border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10"
+                ? "bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20"
+                : "bg-slate-950/50 border-white/10 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20"
             )}
           >
-            <Filter className="h-4 w-4" />
+            <Filter className="h-4.5 w-4.5" />
             Bộ lọc nâng cao
             <ChevronDown className={cn("h-4 w-4 transition-transform duration-300", showFilters ? "rotate-180" : "")} />
           </button>
@@ -241,8 +241,8 @@ export default function CRMLeadsPage() {
                       <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Nguồn khách hàng</p>
                       <div className="grid grid-cols-2 gap-2">
                         {['ALL', 'Website', 'Facebook', 'Referral', 'AI_TEST'].map(source => (
-                          <button 
-                            key={source} 
+                          <button
+                            key={source}
                             onClick={() => { setActiveSource(source); setShowFilters(false); }}
                             className={cn(
                               "px-3 py-2 rounded-xl border text-[10px] font-black transition-all uppercase tracking-tighter",
@@ -318,15 +318,15 @@ export default function CRMLeadsPage() {
                   >
                     <td className="px-8 py-6 relative">
                       {/* HOVER INDICATOR BAR */}
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
                       <div className="flex items-center gap-4">
                         {/* Avatar - green border for paid, amber for consult, default for test */}
                         <div className={cn(
                           "h-12 w-12 rounded-xl border flex items-center justify-center font-black text-sm uppercase transition-all",
                           lead.paymentMethod === 'TRANSFER' ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400" :
-                          lead.paymentMethod === 'CONSULT' ? "bg-amber-500/10 border-amber-500/30 text-amber-400" :
-                          "bg-white/5 border-white/5 text-gray-500 group-hover:text-emerald-500"
+                            lead.paymentMethod === 'CONSULT' ? "bg-amber-500/10 border-amber-500/30 text-amber-400" :
+                              "bg-white/5 border-white/5 text-gray-500 group-hover:text-emerald-500"
                         )}>
                           {lead.fullName?.split(' ').pop()?.charAt(0) || 'K'}
                         </div>
@@ -379,15 +379,17 @@ export default function CRMLeadsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-6">
-                      {(() => { const s = getStatus(lead.status); return (
-                        <span className={cn(
-                          "px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border inline-flex items-center gap-1.5",
-                          s.className
-                        )}>
-                          <span className="h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
-                          {s.label}
-                        </span>
-                      );})()
+                      {(() => {
+                        const s = getStatus(lead.status); return (
+                          <span className={cn(
+                            "px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] border inline-flex items-center gap-1.5",
+                            s.className
+                          )}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />
+                            {s.label}
+                          </span>
+                        );
+                      })()
                       }
                     </td>
                     <td className="px-6 py-6">
@@ -410,9 +412,9 @@ export default function CRMLeadsPage() {
                             <Edit className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={(e) => handleDeleteClick(lead.id, e)}
                           className="h-9 w-9 rounded-full border-white/5 bg-white/5 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/20 text-gray-500 transition-all z-10 relative"
                         >
@@ -439,15 +441,15 @@ export default function CRMLeadsPage() {
             Hiển thị {paginatedLeads.length} / {filteredLeads.length} dữ liệu
           </p>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" size="icon" 
+            <Button
+              variant="outline" size="icon"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               className="h-9 w-9 rounded-full border-white/5 bg-white/5 text-gray-500 hover:text-white disabled:opacity-20 transition-all"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button 
+            <Button
               variant="outline" size="icon"
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}

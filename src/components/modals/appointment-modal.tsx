@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Clock, User, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,10 @@ interface AppointmentModalProps {
   onClose: () => void;
   onSuccess: () => void;
   leads?: any[];
+  appointment?: any;
 }
 
-export function AppointmentModal({ isOpen, onClose, onSuccess, leads = [] }: AppointmentModalProps) {
+export function AppointmentModal({ isOpen, onClose, onSuccess, leads = [], appointment }: AppointmentModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -25,6 +26,28 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, leads = [] }: App
     type: 'CONSULTATION',
     notes: '',
   });
+
+  // Populate data when editing
+  useEffect(() => {
+    if (isOpen && appointment) {
+      const startDate = new Date(appointment.startTime);
+      
+      // Get local time string preserving timezone offset correctly
+      const localDate = startDate.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const localTime = startDate.toTimeString().slice(0, 5); // HH:mm
+
+      setFormData({
+        title: appointment.title || '',
+        leadId: appointment.leadId || '',
+        date: localDate,
+        time: localTime,
+        type: appointment.type || 'CONSULTATION',
+        notes: appointment.notes || '',
+      });
+    } else if (isOpen && !appointment) {
+      setFormData({ title: '', leadId: '', date: '', time: '', type: 'CONSULTATION', notes: '' });
+    }
+  }, [isOpen, appointment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,15 +64,20 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, leads = [] }: App
         endTime: endTime.toISOString(),
         type: formData.type,
         notes: formData.notes,
-        status: 'SCHEDULED'
+        status: appointment ? appointment.status : 'SCHEDULED'
       };
 
-      const response: any = await api.post('/crm/appointments', payload);
+      let response: any;
+      if (appointment) {
+        response = await api.patch(`/crm/appointments/${appointment.id}`, payload);
+      } else {
+        response = await api.post('/crm/appointments', payload);
+      }
+
       if (response.success) {
-        toast.success('Đặt lịch hẹn thành công');
+        toast.success(appointment ? 'Cập nhật lịch hẹn thành công' : 'Đặt lịch hẹn thành công');
         onSuccess();
         onClose();
-        setFormData({ title: '', leadId: '', date: '', time: '', type: 'CONSULTATION', notes: '' });
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra');
@@ -78,8 +106,8 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, leads = [] }: App
           >
             <div className="p-6 border-b border-slate-800 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-black text-white uppercase italic">Đặt lịch hẹn</h2>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Lên lịch tư vấn cho khách hàng</p>
+                <h2 className="text-xl font-black text-white uppercase italic">{appointment ? 'Chỉnh sửa lịch hẹn' : 'Đặt lịch hẹn'}</h2>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{appointment ? 'Cập nhật thông tin lịch hẹn' : 'Lên lịch tư vấn cho khách hàng'}</p>
               </div>
               <button onClick={onClose} className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                 <X className="h-4 w-4" />
@@ -176,7 +204,7 @@ export function AppointmentModal({ isOpen, onClose, onSuccess, leads = [] }: App
               <Button type="submit" disabled={loading}
                 className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] uppercase tracking-widest rounded-xl mt-2"
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Xác nhận tạo'}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (appointment ? 'Lưu thay đổi' : 'Xác nhận tạo')}
               </Button>
             </form>
           </motion.div>

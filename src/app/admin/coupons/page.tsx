@@ -140,16 +140,16 @@ export default function CouponsPage() {
         </Button>
       </div>
 
-      {/* FILTERS */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-10">
-        <div className="flex-1 relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+      {/* SEARCH BAR */}
+      <div className="mb-10">
+        <div className="relative group w-full">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
           <input
-            type="text"
+            type="search"
             placeholder="Tìm theo mã hoặc tên chương trình..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-14 pl-12 pr-5 rounded-2xl bg-white border border-slate-100 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/5 transition-all text-sm font-bold outline-none placeholder:text-slate-400 shadow-sm"
+            className="w-full h-12 pl-12 pr-5 rounded-full bg-white border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm font-medium outline-none placeholder:text-slate-400 shadow-sm"
           />
         </div>
       </div>
