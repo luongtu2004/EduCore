@@ -12,7 +12,7 @@ export class BannersService {
 
   async create(data: CreateBannerInput) {
     return this.prisma.banner.create({
-      data
+      data: data as any
     });
   }
 

@@ -12,7 +12,7 @@ export class FAQsService {
 
   async create(data: CreateFAQInput) {
     return this.prisma.fAQ.create({
-      data
+      data: data as any
     });
   }
 
